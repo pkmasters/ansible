@@ -1,0 +1,17 @@
+---
+- name: gather playbook
+  hosts: coredistro
+  gather_facts: false
+  tasks:
+    - name: Show tech
+      ios_command:
+        commands: show tech
+      register: tech
+      vars:
+        ansible_terminal_stderr_re:
+          - pattern: 'randomPatternThatWontMatch'
+
+    - name: print show tech
+      copy:
+        content: "{{ tech.stdout[0] }}"
+        dest: "/home/op/ciscokbups/techsupport/coredistro/{{ inventory_hostname }}_tech.txt"

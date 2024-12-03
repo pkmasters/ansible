@@ -1,0 +1,9 @@
+---
+- name: coredistro
+  import_playbook: gather-coredistro.yaml
+
+- name: dco
+  import_playbook: gather-dco.yaml
+
+- name: access
+  import_playbook: gather-access.yaml

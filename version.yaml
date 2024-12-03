@@ -1,0 +1,15 @@
+---
+- name: Get model of ALL switches
+  hosts: coredistro
+  gather_facts: false
+
+  tasks:
+    - name: Get show version
+      ios_command:
+       commands: show version | i cisco
+      register: version
+
+    - name: Save config to version folder
+      copy:
+       content: "{{ version.stdout[0] }}"
+       dest: "/home/op/ciscokbups/{{inventory_hostname}}_model.txt"
