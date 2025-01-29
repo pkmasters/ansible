@@ -1,0 +1,83 @@
+---
+- name: Apply STIGs from Cisco IOS XE Switch NDM V3R2 Oct 2024
+  hosts: cisco
+  gather_facts: false
+  
+  #  - name: V-2206
+  #    ios_config:
+  #      lines:
+  #        - 
+  
+  tasks:
+    - name: V-220534 *Disable services*
+      ios_config:
+        lines:
+         # - no boot network
+          - no ip boot server
+          - no ip bootp server
+          - no ip dns server
+         # - no ip identd 
+          - no ip finger
+          - no ip http server
+          - no ip rcmd rcp-enable
+          - no ip rcmd rsh-enable
+          - no service config
+          - no service finger
+          - no service tcp-small-servers
+          - no service udp-small-servers
+          - no service pad
+          - no service call-home
+    - name: V-220544 *Set idle timeout to 5 minutes*
+      ios_config:
+        lines:
+          - ip http timeout-policy idle 300 life 300 requests 10
+          - line vty 0 1
+          - exec-timeout 5 0
+          - line con 0
+          - exec-timeout 5 0
+    - name: V-220555 *SSH to use FIPS valid HMAC for remote maintenance sessions*
+      ios_config:
+        lines:
+          - ip ssh version 2
+          - ip ssh server algorithm mac hmac-sha2-512 hmac-sha2-256
+    - name: V-220556 *Implement cryptographic mechanisms to protect confidentiality of maintenance sessions*
+      ios_config:
+        lines:
+          - ip ssh server algorithm encryption aes256-ctr aes192-ctr aes128-ctr
+    - name: V-220520,1,2,6,8,19,30,31,32,33,45,47,48,59,61 *Logging related commands*
+      ios_config:
+        lines:
+          - logging trap critical
+          - file privilege 15
+          - service timestamps log datetime localtime
+          - logging buffered 10000 informational
+          - archive
+          - log config
+          - logging enable
+  #  - name: V-220535 *configure a local account*
+  #    ios_config:
+  #      lines:
+  #        - username FMDES privlege 10 common-criteria-policy PASSWORD_POLICY password xxx
+    - name: V-220524 *enforce limit of three consecutive invalid login attempts*
+      ios_config:
+        lines:
+          - login block-for 900 attempts 3 within 120
+    - name: V-22037-39,40-42 *password policy creation
+      ios_config:
+        lines:
+          - aaa new-model
+          - aaa common-criteria policy PASSWORD_POLICY
+          - min-length 15
+          - upper-case 1
+          - lower-case 1
+          - numeric-count 1
+          - special-case 1
+          - char-changes 8
+    - name: V-220518 *limit number of concurrent management sessions to org-defined number*
+      ios_config:
+        lines:
+          - ip http max-connections 1
+          - line vty 0 1
+          - transport input ssh
+          - line vty 2 15
+          - transport input none
