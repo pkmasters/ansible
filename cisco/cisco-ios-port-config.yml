@@ -39,12 +39,12 @@
           - desc {{ description }} #sets description based on VLAN
       vars:
         description: >
-          {% if vlan_access_port_selection|int == 100 %}
-            Cam Location
-          {% elif vlan_access_port_selection|int in [108,116] %}
-            iStar Location
-          {% elif vlan_access_port_selection|int == 120 %}
-            AiPhone/Workstation Location
+          {% if vlan_access_port_selection|int == XXX %}
+            DAC Location
+          {% elif vlan_access_port_selection|int in [XX,XX] %}
+            ACB Location
+          {% elif vlan_access_port_selection|int == XXX %}
+            ABC Location
           {% else %}
             Access Port
           {% endif %}
