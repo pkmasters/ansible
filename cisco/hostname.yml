@@ -1,12 +1,7 @@
 ---
-- name: Apply misc configurations to switch.
+- name: Change the Hostname of a Cisco Switch to Ansible Inventory Hostname
   hosts: cisco
   gather_facts: false
-  
-  #  - name: 
-  #    ios_config:
-  #      lines:
-  #        - 
   
   tasks:
     - name: Set hostname
