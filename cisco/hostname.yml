@@ -1,0 +1,15 @@
+---
+- name: Apply misc configurations to switch.
+  hosts: cisco
+  gather_facts: false
+  
+  #  - name: 
+  #    ios_config:
+  #      lines:
+  #        - 
+  
+  tasks:
+    - name: Set hostname
+      ios_config:
+        lines:
+          - hostname {{ inventory_hostname }}
