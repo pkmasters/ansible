@@ -48,6 +48,8 @@
           {% else %}
             Access Port
           {% endif %}
+      when: access_port_selection is defined and access_port_selection !="" and access_port_selection !="0"
+      when: vlan_access_port_selection is defined and vlan_access_port_selection !="" and vlan_access_port_selection !="0"
     
     - name: Configure the Ethernet Trunk Port(s)
       cisco.ios.ios_config:
@@ -59,12 +61,15 @@
           - no shutdown #enables the port
           - description Trunk to Location #sets a description
           - switchport noneg #force static trunking
+      when: trunk_port_selection is defined and trunk_port_selection != "" and trunk_port_selection != "0"
+      when: vlan_trunk_port_selection is defined and vlan_trunk_port_selection !="" and vlan_trunk_port_selection !="0"
 
     - name: Configure the Native VLAN on the Trunk(s)
       ios_config:
         lines:
           - interface range {{ trunk_port_selection }} #selects the range of interfaces
           - switchport trunk native vlan {{ native_trunk_port_selection | int }} #assigns the native vlan if there is one
+      when: vlan_trunk_port_selection is defined and vlan_trunk_port_selection !="" and vlan_trunk_port_selection !="0"
       when: native_trunk_port_selection is defined and native_trunk_port_selection != "" and native_trunk_port_selection != "0"
 
     - name: Disable the Remaining Ethernet Port(s)
@@ -73,3 +78,4 @@
           - interface range {{ shut_port_selection }} #selects the range of interfaces
           - shutdown #admin disables the port
           - desc OPEN Port #sets the description
+      when: shut_port_selection is defined and shut_port_selection != "" and shut_port_selection != "0"
