@@ -1,5 +1,5 @@
 ---
-- name: gather playbook
+- name: Access Layer Cisco Switches - Show Tech
   hosts: access
   gather_facts: false
   tasks:
@@ -14,4 +14,4 @@
     - name: print show tech
       copy:
         content: "{{ tech.stdout[0] }}"
-        dest: "/home/op/ciscokbups/techsupport/access/{{ inventory_hostname }}_tech.txt"
+        dest: "/techsupport/access/{{ inventory_hostname }}_tech.txt"
