@@ -1,6 +1,6 @@
 ---
-- name: Get model of ALL switches
-  hosts: coredistro
+- name: Get model of ALL Cisco switches
+  hosts: cisco
   gather_facts: false
 
   tasks:
@@ -12,4 +12,4 @@
     - name: Save config to version folder
       copy:
        content: "{{ version.stdout[0] }}"
-       dest: "/home/op/ciscokbups/{{inventory_hostname}}_model.txt"
+       dest: "/ciscobackups/{{inventory_hostname}}_model.txt"
