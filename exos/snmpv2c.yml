@@ -1,0 +1,12 @@
+---
+- name: Configure SNMPv2c on EXOS Switches
+  hosts: exos
+  gather_facts: false
+  tasks:
+    - name: run snmpv2c command
+      exos_config:
+        lines:
+          - enable snmp access
+          - enable snmp access snmp-v1v2c
+          - configure snmpv3 add community "public" name "public" user "v1v2c_ro"
+          - configure snmpv3 add group "v1v2cGroup" user "v1v2c_ro" sec-model snmpv2c
