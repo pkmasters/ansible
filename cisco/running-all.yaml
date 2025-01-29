@@ -1,4 +1,4 @@
-- name: Backup running-config
+- name: Backup running-config of Cisco Switches
   hosts: cisco
   gather_facts: false
     
@@ -8,4 +8,4 @@
         backup: yes
         backup_options:
           filename: "{{ inventory_hostname }}.txt"
-          dir_path: "/home/op/ciscokbups"
+          dir_path: "/ciscobackups"
