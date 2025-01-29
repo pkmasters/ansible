@@ -1,0 +1,82 @@
+---
+- name: A test playbook
+  hosts: cisco
+  gather_facts: false
+  #tasks:
+  #  - name: playbook
+  #    ios_config:
+  #      lines:
+  #        - switchport mode
+  
+  tasks:
+    - name: V-220625 *manage excess bandwidth to limit effects of packet-flooding types of DoS attacks*
+      ios_config:
+        lines:
+          - mls qos
+
+    - name: V-220638 *must implement RSTP where VLANs span multiple switches with redundant links*
+      ios_config:
+        lines:
+          - spanning-tree mode rapid-pvst
+
+    - name: V-220639 *must enable UDLD to protect against one-way connections*
+      ios_config:
+        lines:
+          - udld enable
+
+    - name: V-220630 *must have BPDU guard enabled on all user-faced or untrusted access switch ports*
+      ios_config:
+        lines:
+          - int g0/1
+          - spanning-tree bpduguard enable
+
+    - name: V-220631 *must have STP loop guard enabled*
+      ios_config:
+        lines:
+          - spanning-tree loopguard default
+
+    - name: V-220632 *must have UUFB enabled*
+      ios_config:
+        lines:
+          - int g0/1
+          - switchport block unicast
+
+    - name: V-220634 *must have IP source guard enabled on all user-facing or untrusted access switch ports*
+      ios_config:
+        lines:
+          - int g0/1
+          - ip verify source
+
+    - name: V-220645 *must have all user-facing or untrusted ports configured as access switch ports*
+      ios_config:
+        lines:
+          - int g0/1
+          - switchport mode access
+          - switchport access vlan 120
+          - desc CONFIGURED WITH ANSIBLE
+
+    - name: V-220641 *must have all disabled switchports assigned to an unused VLAN*
+      ios_config:
+        lines:
+          - int g0/2
+          - switchport mode access
+          - switchport access vlan 666
+          - desc CONFIGURED WITH ANSIBLE
+
+    - name: V-220636 *must have Storm Control configured on all host-facing switchports*
+      ios_config:
+        lines:
+          - int g0/1
+          - storm-control unicast level bps 62000000
+          - storm-control broadcast level bps 20000000
+
+    - name: V-220637 *must have IGMP or MLD snooping configured on all VLANs*
+      ios_config:
+        lines:
+          - ip igmp snooping
+          
+    - name: V-220629 *must have Root Guard enabled on all switch ports connecting to access layer switches*
+      ios_config:
+        lines:
+          - int g0/1
+          - spanning-tree guard root
