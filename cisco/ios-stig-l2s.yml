@@ -1,13 +1,8 @@
 ---
-- name: A test playbook
+- name: Configure Cisco IOS/IOS XE L2S STIGs
   hosts: cisco
   gather_facts: false
-  #tasks:
-  #  - name: playbook
-  #    ios_config:
-  #      lines:
-  #        - switchport mode
-  
+
   tasks:
     - name: V-220625 *manage excess bandwidth to limit effects of packet-flooding types of DoS attacks*
       ios_config:
