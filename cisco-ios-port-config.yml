@@ -1,0 +1,75 @@
+---
+- name: Interactive Playbook - Cisco IOS/IOS XE Port Configurator
+  hosts: cisco
+  gather_facts: false
+  vars_prompt:
+
+    - name: access_port_selection
+      prompt: Enter the interface(s) you would like to configure as an access port (eg. Gi0/1,Gi1/0/1,Eth1/1)
+      private: false
+
+    - name: vlan_access_port_selection
+      prompt: Enter the VLAN would like to access those interface(s) (eg. 10,20)
+      private: false
+
+    - name: trunk_port_selection
+      prompt: Enter the interface(s) you would like to configure as a trunk port (eg. Gi0/1,Gi1/0/1,Eth1/1)
+      private: false
+
+    - name: vlan_trunk_port_selection
+      prompt: Enter the VLAN(s) you would like to trunk over those interface(s) (eg. 10,20)
+      private: false
+    
+    - name: native_trunk_port_selection
+      prompt: Enter the Native VLAN for the Trunk(s) (leave blank if none)
+      private: false
+
+    - name: shut_port_selection
+      prompt: Enter the interface(s) you would like to shutdown (eg. Gi0/1,Gi1/0/1,Eth1/1)
+      private: false
+
+  tasks:
+    - name: Configure the Ethernet Access Port(s)
+      ios_config:
+        lines:
+          - interface range {{ access_port_selection }} #selects the range of interfaces
+          - switchport mode access #put to access mode
+          - switchport access vlan {{ vlan_access_port_selection }} #puts VLANs on the interfaces
+          - no shutdown #enables the port
+          - desc {{ description }} #sets description based on VLAN
+      vars:
+        description: >
+          {% if vlan_access_port_selection|int == 100 %}
+            Cam Location
+          {% elif vlan_access_port_selection|int in [108,116] %}
+            iStar Location
+          {% elif vlan_access_port_selection|int == 120 %}
+            AiPhone/Workstation Location
+          {% else %}
+            Access Port
+          {% endif %}
+    
+    - name: Configure the Ethernet Trunk Port(s)
+      cisco.ios.ios_config:
+        lines:
+          - interface range {{ trunk_port_selection }} #selects the range of intefaces
+          - switchport mode trunk #put to trunk mode
+          - no switchport trunk allowed vlan #clears any prexisting VLAN
+          - switchport trunk allowed vlan {{ vlan_trunk_port_selection }} #allows VLANs over the trunk
+          - no shutdown #enables the port
+          - description Trunk to Location #sets a description
+          - switchport noneg #force static trunking
+
+    - name: Configure the Native VLAN on the Trunk(s)
+      ios_config:
+        lines:
+          - interface range {{ trunk_port_selection }} #selects the range of interfaces
+          - switchport trunk native vlan {{ native_trunk_port_selection | int }} #assigns the native vlan if there is one
+      when: native_trunk_port_selection is defined and native_trunk_port_selection != "" and native_trunk_port_selection != "0"
+
+    - name: Disable the Remaining Ethernet Port(s)
+      ios_config:
+        lines:
+          - interface range {{ shut_port_selection }} #selects the range of interfaces
+          - shutdown #admin disables the port
+          - desc OPEN Port #sets the description
