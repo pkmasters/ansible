@@ -2,12 +2,7 @@
 - name: Apply STIGs from Cisco IOS XE Switch NDM V3R2 Oct 2024
   hosts: cisco
   gather_facts: false
-  
-  #  - name: V-2206
-  #    ios_config:
-  #      lines:
-  #        - 
-  
+
   tasks:
     - name: V-220534 *Disable services*
       ios_config:
@@ -57,7 +52,7 @@
   #  - name: V-220535 *configure a local account*
   #    ios_config:
   #      lines:
-  #        - username FMDES privlege 10 common-criteria-policy PASSWORD_POLICY password xxx
+  #        - username user privlege 10 common-criteria-policy PASSWORD_POLICY password password
     - name: V-220524 *enforce limit of three consecutive invalid login attempts*
       ios_config:
         lines:
