@@ -57,7 +57,7 @@ ansible-playbooks/
     inventory/: Includes inventory files that define the target hosts.
     roles/: Contains reusable roles for organizing playbooks.
 
-Contributing
+## Contributing
 
 Contributions are welcome! If you have ideas for improvements, feel free to create a pull request or open an issue.
 
@@ -67,6 +67,6 @@ Contributions are welcome! If you have ideas for improvements, feel free to crea
     Push to the branch (git push origin feature/YourFeature).
     Open a pull request.
 
-License
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
