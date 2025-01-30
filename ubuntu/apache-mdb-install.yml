@@ -1,0 +1,37 @@
+- name: Install Apache and MariaDB
+  hosts: ubuntu
+  become: yes
+  vars:
+    db_root_password: "hopefully-a-secure-password"
+
+  tasks:
+    - name: Install required Python MySQL package
+      apt:
+        name: python3-pymysql
+        state: present
+        update_cache: yes
+
+    - name: Install Apache and MariaDB
+      apt:
+        name:
+          - apache2
+          - mariadb-server
+          - mariadb-client
+          - php
+          - php-mysql
+        state: present
+
+    - name: Ensure MariaDB is running and enabled
+      service:
+        name: mariadb
+        state: started
+        enabled: yes
+
+    - name: Secure MariaDB Installation (Set Root Password)
+      mysql_user:
+        name: root
+        host: localhost
+        password: "{{ db_root_password }}"
+        check_implicit_admin: yes
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        priv: "*.*:ALL,GRANT"
