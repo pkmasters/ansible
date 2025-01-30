@@ -1,0 +1,136 @@
+---
+- name: Simple Playbook to Update Server, Install/Configure UFW, Install Docker Engine/Docker Compose, and Deploy Dockge
+  hosts: ubuntu
+  become: yes
+  
+  tasks:
+    - name: Update package list
+      apt:
+        update_cache: yes
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: full
+        autoremove: yes
+        
+    - name: Install UFW
+      apt:
+        name:
+          - ufw
+        state: present
+        
+    - name: Allow SSH Port UFW
+      ufw:
+        rule: allow
+        port: "22"
+        proto: tcp
+
+    - name: Allow Dockge Port UFW
+      ufw:
+        rule: allow
+        port: "5001"
+        proto: tcp
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+        
+    - name: Update APT package index
+      apt:
+        update_cache: yes
+
+    - name: Install required packages for Docker
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker APT repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release | lower }} stable"
+        state: present
+
+    - name: Install Docker Engine
+      apt:
+        name: docker-ce
+        state: latest
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Install Docker Compose
+      shell: |
+        curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose &&
+        chmod +x /usr/local/bin/docker-compose
+
+    - name: Verify Docker installation
+      command: docker --version
+      register: docker_version
+
+    - name: Verify Docker Compose installation
+      command: docker compose version
+      register: compose_version
+
+    - name: Print Docker version
+      debug:
+        msg: "Docker version: {{ docker_version.stdout }}"
+
+    - name: Print Docker Compose version
+      debug:
+        msg: "Docker Compose version: {{ compose_version.stdout }}"
+
+    - name: Ensure the Dockge directory exists
+      ansible.builtin.stat:
+        path: /path/to/dockge #change this
+      register: dockge_dir
+
+    - name: Create the dockge directory if it does not exist
+      file:
+        path: /path/to/dockge #change this
+        state: directory
+      when: not dockge_dir.stat.exists
+      
+    - name: Ensure the stacks directory exists
+      ansible.builtin.stat:
+        path: /path/to/dockge/stacks #change this
+      register: stacks_dir
+
+    - name: Create the stacks directory if it does not exist
+      file:
+        path: /path/to/dockge/stacks #change this
+        state: directory
+      when: not stacks_dir.stat.exists
+
+    - name: Copy Dockge Docker Compose file
+      copy:
+        content: |
+          version: "3.8"
+          services:
+            dockge:
+              image: louislam/dockge:1
+              restart: always
+              ports:
+                - 5001:5001
+              volumes:
+                - /var/run/docker.sock:/var/run/docker.sock
+                - /path/to/dockge/stacks:/path/to/dockge/stacks #change this to stacks location
+                - /path/to/dockge/data:/app/data #change this to data location
+              environment:
+                - DOCKGE_STACKS_DIR=/home/jxadmin/dockge/stacks
+        dest: /path/to/dockge/docker-compose.yml  # Update this path
+
+    - name: Deploy Dockge stack
+      command: docker compose up -d
+      args:
+        chdir: /path/to/dockge  # Directory where docker-compose.yml is located
