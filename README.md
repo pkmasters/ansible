@@ -1,6 +1,6 @@
 # Ansible Playbooks Repository
 
-This repository contains a collection of Ansible playbooks created to automate various network management tasks. These playbooks aim to simplify and enhance the efficiency of network configuration, deployment, and administration processes.
+This repository contains a collection of Ansible playbooks created to automate various IT management tasks. These playbooks aim to simplify and enhance the efficiency of device configuration, deployment, and administration processes.
 
 ## Overview
 
@@ -8,7 +8,7 @@ Ansible is a powerful automation tool that allows you to manage and configure sy
 
 ## Playbooks
 
-Each playbook in this repository addresses specific network automation needs. Feel free to explore, use, and adapt them to your environment.
+Each playbook in this repository addresses specific IT automation needs. Feel free to explore, use, and adapt them to your environment.
 
 ## Contribution
 
