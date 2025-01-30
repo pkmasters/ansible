@@ -1,10 +1,29 @@
-- name: Install Apache and MariaDB
+- name: Install Apache and MariaDB and Configures UFW
   hosts: ubuntu
   become: yes
   vars:
     db_root_password: "hopefully-a-secure-password"
 
   tasks:
+
+    - name: Update package list
+      apt:
+        update_cache: yes
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: full
+        autoremove: yes
+
+    - name: Allow HTTP and HTTPS in UFW
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - 80
+        - 443
+
     - name: Install required Python MySQL package
       apt:
         name: python3-pymysql
