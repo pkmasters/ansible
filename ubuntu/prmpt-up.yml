@@ -1,0 +1,25 @@
+---
+- hosts: localhost  # Start from localhost for user input
+  gather_facts: no
+  vars_prompt:
+    - name: host_var
+      prompt: "Enter the hostname target host from your hosts file"
+      private: no
+
+  tasks:
+    - name: Add dynamic host to the group
+      add_host:
+        name: "{{ host_var }}"
+        groups: dynamic_hosts
+
+- hosts: dynamic_hosts  # Target the dynamically added host
+  gather_facts: yes
+  become: yes
+  tasks:
+    - name: Update package list
+      apt:
+        update_cache: yes
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: full
