@@ -11,6 +11,7 @@
       add_host:
         name: "{{ host_var }}"
         groups: dynamic_hosts
+      when: host_var is defined and host_var !="" and host_var !="0"
 
 - hosts: dynamic_hosts  # Target the dynamically added host
   gather_facts: yes
