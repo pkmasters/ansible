@@ -4,7 +4,7 @@ This repository contains a collection of Ansible playbooks created to automate v
 
 ## Overview
 
-Ansible is a powerful automation tool that allows you to manage and configure systems in a consistent and repeatable manner. The playbooks in this repository are designed to help network administrators automate routine tasks, ensuring faster deployments and reducing the potential for human error.
+Ansible is a powerful automation tool that allows you to manage and configure systems in a consistent and repeatable manner. The playbooks in this repository are designed to help IT administrators automate routine tasks, ensuring faster deployments and reducing the potential for human error.
 
 ## Playbooks
 
