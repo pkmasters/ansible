@@ -1,0 +1,19 @@
+---
+- name: Enables iptables for Docker Networks
+  hosts: ubuntu
+  become: yes
+  tasks:
+    - name: Copy content to /etc/docker/daemon.json
+      copy:
+        dest: /etc/docker/daemon.json
+        content: |
+          {
+             "iptables": true
+          }
+      notify: Restart Docker
+
+  handlers:
+    - name: Restart Docker
+      systemd:
+        name: docker
+        state: restarted
