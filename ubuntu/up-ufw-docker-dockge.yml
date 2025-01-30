@@ -103,7 +103,7 @@
       
     - name: Ensure the stacks directory exists
       ansible.builtin.stat:
-        path: /path/to/stacks #change this to your stacks path (Note: Dockge creates a stacks directory, I usually put it in /path/to/dockge)
+        path: /path/to/stacks #change this to your stacks path (Note: Dockge creates a stacks directory, I usually do the directory before Dockge. eg. /path/to)
       register: stacks_dir
 
     - name: Create the stacks directory path if it does not exist
@@ -124,8 +124,8 @@
                 - 5001:5001
               volumes:
                 - /var/run/docker.sock:/var/run/docker.sock
-                - /path/to/stacks:/path/to/stacks #change this to stacks location
-                - /path/to/dockge/data:/app/data #change this to data location
+                - /path/to/stacks:/path/to/stacks
+                - /path/to/dockge/data:/app/data
               environment:
                 - DOCKGE_STACKS_DIR=/path/to/stacks
         dest: /path/to/dockge/docker-compose.yml  # Update this path (I usually do same path as Dockge)
