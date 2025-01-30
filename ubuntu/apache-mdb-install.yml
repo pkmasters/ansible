@@ -18,11 +18,8 @@
     - name: Allow HTTP and HTTPS in UFW
       ufw:
         rule: allow
-        port: "{{ item }}"
+        port: "80,443"
         proto: tcp
-      loop:
-        - 80
-        - 443
 
     - name: Install required Python MySQL package
       apt:
