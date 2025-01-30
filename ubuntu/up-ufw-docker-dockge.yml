@@ -103,7 +103,7 @@
       
     - name: Ensure the stacks directory exists
       ansible.builtin.stat:
-        path: /path/to/stacks #change this to your stacks path (Note: Dockge creates a stacks directory, I usually do the directory before Dockge. eg. /path/to)
+        path: /path/to/stacks #change this to your stacks path (Note: Remove this and the following command from the playbook if you want the "stacks" folder to be in the same root path as the "dockge" folder.)
       register: stacks_dir
 
     - name: Create the stacks directory path if it does not exist
