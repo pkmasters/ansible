@@ -92,18 +92,18 @@
 
     - name: Ensure the Dockge directory exists
       ansible.builtin.stat:
-        path: /path/to/dockge #change this
+        path: /path/to/dockge #change this to your path
       register: dockge_dir
 
-    - name: Create the dockge directory if it does not exist
+    - name: Create the Dockge directory if it does not exist
       file:
-        path: /path/to/dockge #change this
+        path: /path/to/dockge #change this to your path
         state: directory
       when: not dockge_dir.stat.exists
       
     - name: Ensure the stacks directory exists
       ansible.builtin.stat:
-        path: /path/to/stacks #change this to your stacks path (
+        path: /path/to/stacks #change this to your stacks path (Note: Dockge creates a stacks directory, I usually put it in /path/to/dockge)
       register: stacks_dir
 
     - name: Create the stacks directory path if it does not exist
@@ -128,9 +128,9 @@
                 - /path/to/dockge/data:/app/data #change this to data location
               environment:
                 - DOCKGE_STACKS_DIR=/path/to/stacks
-        dest: /path/to/dockge/docker-compose.yml  # Update this path (I usually do same path as dockge)
+        dest: /path/to/dockge/docker-compose.yml  # Update this path (I usually do same path as Dockge)
 
     - name: Deploy Dockge stack
       command: docker compose up -d
       args:
-        chdir: /path/to/dockge  # Directory path where your Dockge docker-compose.yml is located (above dest path)
+        chdir: /path/to/dockge  # Directory path where the Dockge docker-compose.yml is located (above dest path)
