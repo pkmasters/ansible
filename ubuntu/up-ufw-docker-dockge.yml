@@ -103,16 +103,16 @@
       
     - name: Ensure the stacks directory exists
       ansible.builtin.stat:
-        path: /path/to/dockge/stacks #change this
+        path: /path/to/stacks #change this to your stacks path (
       register: stacks_dir
 
-    - name: Create the stacks directory if it does not exist
+    - name: Create the stacks directory path if it does not exist
       file:
-        path: /path/to/dockge/stacks #change this
+        path: /path/to/stacks #change this to your stacks path
         state: directory
       when: not stacks_dir.stat.exists
 
-    - name: Copy Dockge Docker Compose file
+    - name: Copy Dockge Docker Compose content into a yml file
       copy:
         content: |
           version: "3.8"
@@ -124,13 +124,13 @@
                 - 5001:5001
               volumes:
                 - /var/run/docker.sock:/var/run/docker.sock
-                - /path/to/dockge/stacks:/path/to/dockge/stacks #change this to stacks location
+                - /path/to/stacks:/path/to/stacks #change this to stacks location
                 - /path/to/dockge/data:/app/data #change this to data location
               environment:
-                - DOCKGE_STACKS_DIR=/home/jxadmin/dockge/stacks
-        dest: /path/to/dockge/docker-compose.yml  # Update this path
+                - DOCKGE_STACKS_DIR=/path/to/stacks
+        dest: /path/to/dockge/docker-compose.yml  # Update this path (I usually do same path as dockge)
 
     - name: Deploy Dockge stack
       command: docker compose up -d
       args:
-        chdir: /path/to/dockge  # Directory where docker-compose.yml is located
+        chdir: /path/to/dockge  # Directory path where your Dockge docker-compose.yml is located (above dest path)
