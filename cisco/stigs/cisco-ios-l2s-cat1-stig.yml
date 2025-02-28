@@ -1,0 +1,25 @@
+---
+- name: Cisco IOS L2S Cat 1 STIG
+  hosts: cisco
+  gather_facts: false
+  tasks:
+    - name: V-220623 - Cisco switch must uniquely identify and authenticate all network-connected endpoint device before establishing any connections.
+      ios_config:
+        lines:
+        # Configure radius servers
+          - radius server RADIUS
+          - address ipv4 xxx.xxx.xxx.xxx
+          - key S3cur1ty
+          - exit
+          - radius server RADIUS_2
+          - address ipv4 xxx.xxx.xxx.xxx
+          - key S3cur1ty
+          - exit
+        # Enable 802.1x auth
+          - aaa new-model
+          - aaa group server radius RADIUS_SERVERS
+          - server name RADIUS
+          - server name RADIUS_2
+          - exit
+          - aaa authentication dot1x default group RADIUS_SERVERS
+          - dot1x system-auth-control
