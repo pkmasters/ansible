@@ -1,0 +1,99 @@
+---
+- name: Cisco IOS L2S Cat 2 STIG
+  hosts: cisco
+  gather_facts: false
+  tasks:
+    - name: V-220646 - Cisco switch must have the native VLAN assigned to an ID other than the default VLAN for all 802.1q trunk links
+      ios_config:
+        lines:
+          - int g0/12
+          - switchport trunk native vlan 999
+          - exit
+    - name: V-220645 - Cisco switch must have all user-facing or untrusted ports configured as access switch ports.
+      ios_config:
+        lines:
+          - int g0/1
+          - switchport mode access
+          - exit
+    - name: V-220644 - Cisco switch must not use the default VLAN for management traffic.
+      ios_config:
+        lines:
+          - int vlan 10
+          - ip add 10.10.10.1 255.255.255.0
+          - no shut
+          - exit
+    - name: V-220643 - Cisco switch must have the default VLAN pruned from all trunk ports that do not require it.
+      ios_config:
+        lines:
+          - int g0/12
+          - switchport trunk allowed vlan except 1
+    - name: V-220642 - Cisco switch must not have the default VLAN assigned to any host-facing switch ports.
+      ios_config:
+        lines:
+          - int g0/1
+          - switchport access vlan 20
+          - exit
+    - name: V-220641 - Cisco switch must have all disabled switch ports assigned to an unused VLAN.
+      ios_config:
+        lines:
+          - int range g0/2-11
+          - switchport access vlan 666
+          - desc OPEN
+          - exit
+          - int g0/12
+          - switchport trunk allowed vlan except 666
+          - exit
+    - name: V-220640 - Cisco switch must have all trunk links enabled statically.
+      ios_config:
+        lines:
+          - int g0/12
+          - switchport mode trunk
+          - switchport nonegotiate
+          - exit
+     - name: V-220639 - Cisco switch must enable Unidirectional Link Detection (UDLD) to protect againt one-way connections.
+       ios_config:
+         lines:
+           - udld enable
+     - name: V-220638 - Cisco switch must implement Rapid Spanning Tree Protocol (STP) where VLANs span multiple switches with redundant links
+       ios_config:
+         lines:
+           - spanning-tree mode rapid-pvst
+     - name: V-220635 - Cisco switch must have Dynmaic Address Resolution Protocol (ARP) Inspection (DAI) enabled on all user VLANs.
+       ios_config:
+         lines:
+           - ip arp inspectin vlan 10
+     - name: V-220634 - Cisco switch must have IP Source Guard enabled on all user-facing or untrusted access switch ports.
+       ios_config:
+         lines:
+           - int range g0/1-10
+           - ip verify source
+           - exit
+     - name: V-220633 - Cisco switch must have DHCP snooping for all user VLANs to validate DHCP messages from untrusted sources.
+       ios_config:
+         lines:
+           - ip dhcp snooping
+           - ip dhcp snooping vlan 10
+     - name: V-220632 - Cisco switch must have Unknown Unicast Flood Blocking (UUFB) enabled.
+       ios_config:
+         lines:
+           - int range g0/1-10
+           - switchport block unicast
+           - exit
+     - name: V-220631 - Cisco switch must have Spanning Tree Protocol (STP) Loop Guard enabled.
+       ios_config:
+         lines:
+           - spanning-tree loopguard default
+     - name: V-220630 - Cisco switch must have Bridge Protocol Data Unit (BPDU) Guard enabled on all user-facing or untrusted access switch ports.
+       ios_config:
+         lines:
+           - int range g0/1-10
+           - spanning-tree bpduguard enable
+           - exit
+     - name: V-220625 - Cisco switch must manage excess bandwidth to limit the effects of packet-flooding types of denial-of-service (DoS) attacks. 
+       ios_config:
+         lines:
+           - mls qos
+     - name: V-220624 - Cisco switch must authenticate all VLAN Trunk Protocol (VTP) messages with a hash function using the most secured cryptographic algorithm available.
+       ios_config:
+         lines:
+           - vtp password SECURE_PASSWORD
