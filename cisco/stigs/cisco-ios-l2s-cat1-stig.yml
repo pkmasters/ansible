@@ -9,11 +9,11 @@
         # Configure radius servers
           - radius server RADIUS
           - address ipv4 xxx.xxx.xxx.xxx
-          - key S3cur1ty
+          - key SECURE_PASSWORD
           - exit
           - radius server RADIUS_2
           - address ipv4 xxx.xxx.xxx.xxx
-          - key S3cur1ty
+          - key SECURE_PASSWORD
           - exit
         # Enable 802.1x auth
           - aaa new-model
