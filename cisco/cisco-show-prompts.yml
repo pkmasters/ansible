@@ -1,0 +1,38 @@
+---
+- name: 1 Interactive Playbook - Cisco IOS/IOS XE Hostname Prompt
+  hosts: localhost
+  gather_facts: false
+  vars_prompt:
+    - name: target_switch
+      prompt: Enter the hostname of the switch to configure (ansible inv hostname)
+      private: false
+
+  tasks:
+    - name: Add the selected switch to a new group
+      add_host:
+        name: "{{  target_switch }}"
+        groups: dynamic_switch
+
+# For troubleshooting purposes: debug the var_prompt variable
+#    - name: Display the hostname of the selected switch
+#      debug:
+#        msg: "SWITCH HOSTNAME: {{ target_switch }}"
+
+- name: 2 Interactive Playbook - Cisco IOS/IOS XE Show Commands Prompt
+  hosts: dynamic_switch
+  gather_facts: false
+  vars_prompt:
+    - name: command
+      prompt: Type a show command. Default is
+      private: false
+      default: "show version | i cisco"
+      
+  tasks:
+    - name: Run show command based on user input
+      ios_command:
+        commands: "{{ command }}"
+      register: command_out
+
+    - name: Display the show command output
+      debug:
+        msg: "{{ command_out.stdout_lines }}"
