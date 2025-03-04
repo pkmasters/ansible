@@ -1,0 +1,314 @@
+---
+- name: Cisco IOS NDM Cat 2 STIG
+  hosts: cisco
+  gather_facts: false
+  tasks:
+    - name: V-220609 - Cisco switch must be configured to protect against known types of denial-of-service (DoS) attacks by employing organization-defined security safeguards.
+      ios_config:
+        lines:
+          - ip access-list extended CoPP_CRITICAL
+          - remark our control plane adjacencies are critical
+          - permit ospf host x.x.x.x any
+          - permit pim host x.x.x.x any
+          - permit igmp any 224.0.0.0 15.255.255.255
+          - permit tcp host x.x.x.x eq bgp host y.y.y.y
+          - deny ip any any
+          - exit
+          - ip access-list extended CoPP_IMPORTANT
+          - permit tcp host x.x.x.x eq tacacs any
+          - permit tcp x.x.x.0 0.0.0.255 any eq 22
+          - permit udp host x.x.x.x any eq snmp
+          - permit udp host x.x.x.x any eq ntp any
+          - deny ip any any
+          - exit
+          - ip access-list extended CoPP_NORMAL
+          - remark we will want to rate limit ICMP traffic
+          - permit icmp any any echo
+          - permit icmp any any echo-reply
+          - permit icmp any any time-exceeded
+          - permit icmp any any unreachable
+          - deny ip any any
+          - exit
+          - ip access-list extended CoPP_UNDESIRABLE
+          - remark management plane traffic that should not be received
+          - permit udp any any eq ntp
+          - permit udp any any eq snmp
+          - permit tcp any any eq 22
+          - permit tcp any any eq 23
+          - remark control plane traffic not configured on switch
+          - permit eigrp any any
+          - permit udp any any eq rip
+          - deny ip any any
+          - exit
+          - ip access-list extended CoPP_DEFAULT
+          - permit ip any any
+          - exit
+          - class-map match-all CoPP_CRITICAL
+          - match access-group name CoPP_CRITICAL
+          - class-map match-any CoPP_IMPORTANT
+          - match access-group name CoPP_IMPORTANT
+          - match protocol arp
+          - class-map match-all CoPP_NORMAL
+          - match access-group name CoPP_NORMAL
+          - class-map match-any CoPP_UNDESIRABLE
+          - match access-group name CoPP_UNDESIRABLE
+          - class-map match-all CoPP_DEFAULT
+          - match access-group name CoPP_DEFAULT
+          - exit
+          - policy-map CONTROL_PLANE_POLICY
+          - class CoPP_CRITICAL
+          - police 512000 8000 conform-action transmit exceed-action transmit
+          - class CoPP_IMPORTANT
+          - police 256000 4000 conform-action transmit exceed-action drop
+          - class CoPP_NORMAL
+          - police 128000 2000 conform-action transmit exceed-action drop
+          - class CoPP_UNDESIRABLE
+          - police 8000 1000 conform-action drop exceed-action drop
+          - class CoPP_DEFAULT
+          - police 64000 1000 conform-action transmit exceed-action drop
+          - exit
+          - exit
+          - exit
+          - control-plane
+          - service-policy input CONTROL_PLANE_POLICY
+          - exit
+    - name: V-220601 - Cisco switch must be configured to synchronize its clock with the primary and secondary time sources using redundant authoritative time sources.
+      ios_config:
+        lines:
+          - ntp server x.x.x.x
+          - ntp server y.y.y.y
+    - name: V-220594 - Cisco switch must be configured to require that when a password is changed, the characters are changed in at least eight of the positions within the password.
+      ios_config:
+        lines:
+          - aaa common-criteria policy PASSWORD_POLICY
+          - char-changes 8
+          - exit
+    - name: V-220593 - Cisco switch must be configured to enforce password complexity by requiring that at least one special character be used.
+      ios_config:
+        lines:
+          - aaa common-criteria policy PASSWORD_POLICY
+          - special-case 1
+          - exit
+    - name: V-220592 - Cisco switch must be configured to enforce password complexity by requiring that at least one numeric character be used.
+      ios_config:
+        lines:
+          - aaa common-criteria policy PASSWORD_POLICY
+          - numeric-count 1
+          - exit
+    - name: V-220591 - Cisco switch must be configured to enforce password complexity by requiring that at least one lowercase character be used.
+      ios_config:
+        lines:
+          - aaa common-criteria policy PASSWORD_POLICY
+          - lower-case 1
+          - exit
+    - name: V-220590 - Cisco switch must be configured to enforce password complexity by requiring that at least one uppercase character be used.
+      ios_config:
+        lines:
+          - aaa common-criteria policy PASSWORD_POLICY
+          - upper-case 1
+          - exit
+    - name: V-220589 - Cisco switch must be configured to enforce a minimum 15-character password length.
+      ios_config:
+        lines:
+          - aaa common-criteria policy PASSWORD_POLICY
+          - min-length 15
+          - exit
+    - name: V-220619 - Cisco switch must be configured to obtain its public key certificates from an appropriate certificate policy through an approved service provider.
+      ios_config:
+        lines:
+          - enrollment url http://trustpoint1.example.com
+    - name: V-220618 - Cisco switch must be configured to support organizational requirements to conduct backups of the configuration when changes occur.
+      ios_config:
+        lines:
+          - event manager applet BACKUP_CONFIG
+          - event syslog pattern "%SYS-5-CONFIG_I"
+          - action 1 cli command "enable"
+          - action 2 info type switchname
+          - action 3 cli command "copy run tftp" pattern "remote host"
+          - action 4 cli command "x.x.x.x" pattern "filename"
+          - action 5 cli command "$_info_switchname-config"
+          - action 6 syslog priority informational msg "Configuration backup was executed"
+          - exit
+    - name: V-220613 - Cisco switch must be configured to generate log records for privileged activities.
+      ios_config:
+        lines:
+          - archive
+          - log config
+          - logging enable
+          - exit
+          - exit
+    - name: V-220612 - Cisco switch must be configured to generate audit records when successful/unsuccessful logon attempts occur.
+      ios_config:
+        lines:
+          - login on-failure log
+          - login on-success log
+    - name: V-220611 - Cisco switch must be configured to generate log records when administrator privileges are deleted.
+      ios_config:
+        lines:
+          - archive
+          - log config
+          - logging enable
+          - exit
+          - exit
+    - name: V-220606 - Cisco switch must be configured to authenticate Network Time Protocol (NTP) sources using authentication that is cryptographically based.
+      ios_config:
+        lines:
+          - ntp authenticate
+          - ntp authentication-key 1 md5 SECURE_KEY
+          - ntp trusted-key 1
+          - ntp server x.x.x.x key 1
+          - ntp server y.y.y.y key 1
+    - name: V-220605 - Cisco switch must be configured to encrypt SNMP messages using a FIPS 140-2 approved algorithm.
+      ios_config:
+        lines:
+          - snmp-server group V3GROUP v3 priv read V3READ write V3WRITE
+          - snmp-server user V3USER V3GROUP v3 auth sha xxxxxx priv aes 256 xxxxxx
+    - name: V-220604 - Cisco switch must be configured to authenticate SNMP messages using a FIPS-validated Keyed-Hash Message Authentication Code (HMAC).
+      ios_config:
+        lines:
+          - snmp-server group V3GROUP v3 auth read V3READ write V3WRITE
+          - snmp-server user V3USER V3GROUP v3 auth sha xxxxxxx
+          - snmp-server view V3READ iso included
+          - snmp-server view V3WRITE iso included
+          - snmp-server host x.x.x.x version 3 auth V3USER
+    - name: V-220600 - Cisco switch must be configured to generate an alert for all audit failure events.
+      ios_config:
+        lines:
+          - logging trap critical
+    - name: V-220599 - Cisco switch must be configured to allocate audit record storage capacity in accordance with organization-defined audit record storage requirements.
+      ios_config:
+        lines:
+          - logging buffered 100000 informational
+    - name: V-220597 - Cisco switch must be configured to automatically audit account enabling actions.
+      ios_config:
+        lines:
+          - archive
+          - log config
+          - loggong enable
+          - exit
+          - exit
+    - name: V-220587 - Cisco switch must be configured with only one local account to be used as the account of last resort in the event the authentication server is unavailable.
+      ios_config:
+        lines:
+          - username FMDES privilege 10 common-criteria-policy PASSWORD_POLICY password FM1qaz2wsx!QAZ@WSX
+          - aaa authentication login default group radius local
+    - name: V-220585 - Cisco switch must be configured to limit privileges to change the software resident within software libraries.
+      ios_config:
+        lines:
+          - file privilege 15
+    - name: V-220584 - Cisco switch must be configured to protect audit information from unauthorized deletion.
+      ios_config:
+        lines:
+          - file privilege 15
+    - name: V-220583 - Cisco switch must be configured to protect audit information from unauthorized modification.
+      ios_config:
+        lines:
+          - file privilege 15
+    - name: V-220582 - Cisco switch must be configured to generate audit records containing the full-text recording of privileged commands.
+      ios_config:
+        lines:
+          - archive
+          - log config
+          - logging enable
+          - exit
+          - exit
+    - name: V-220581 -  Cisco switch must produce audit records containing information to establish where the events occurred.
+      ios_config:
+        lines:
+          - ip access-list extended BLOCK_INBOUND
+          - deny icmp any any log-input
+    - name: V-220580 - Cisco switch must produce audit records containing information to establish when (date and time) the events occurred.
+      ios_config:
+        lines:
+          - service timestamps log datetime localtime
+    - name: V-220578 - Cisco device must be configured to audit all administrator activity.
+      ios_config:
+        lines:
+          - logging userinfo
+          - archive
+          - log config
+          - logging enable
+          - exit
+          - exit
+    - name: V-220577 - Cisco switch must be configured to display the Standard Mandatory DoD Notice and Consent Banner before granting access to the device.
+      ios_banner:
+        banner: login
+        text:
+          "You are accessing a U.S. Government (USG) Information System (IS) that is provided for USG-authorized use only.
+
+
+          By using this IS (which includes any device attached to this IS), you consent to the following conditions:
+
+
+          -The USG routinely intercepts and monitors communications on this IS for purposes including, but not limited to, penetration testing, COMSEC monitoring, network operations and defense, personnel misconduct (PM), law enforcement (LE), and counterintelligence (CI) investigations.
+
+
+          -At any time, the USG may inspect and seize data stored on this IS.
+
+
+          -Communications using, or data stored on, this IS are subject to routine monitoring, interception, and search, and may be disclosed or used for any USG-authorized purpose.
+
+
+          -This IS includes security measures (e.g., authentication and access controls) to protect USG interest--not for your personal benefit or privacy.
+
+
+          -Notwithstanding the above, using this IS does not constitute consent to PM, LE or CI investigative searching o monitoring of the content of privileged communications, or work product, related to personal representation or services by attorneys, psychotherapists, or clergy, and their assistants. Such communications and work product are private and confidential.
+          
+          
+          See User Agreement for details."
+        state: present
+    - name: V-220576 - Cisco switch must be configured to enforce the limit of three consecutive invalid logon attempts, after which time it must lock out the user account from accessing the device for 15 minutes.
+      ios_config:
+        lines:
+          - login block-for 900 attempts 3 within 120
+    - name: V-220575 - Cisco switch must be configured to enforce approved authorizations for controlling the flow of management information within the device based on control policies.
+      ios_config:
+        lines:
+          - ip access-list extended MANAGEMENT_NET
+          - permit x.x.x.0 0.0.0.255
+          - exit
+          - line vty 0 1
+          - transport input ssh
+          - access-class MANAGEMENT_NET in
+          - exit
+    - name: V-220574 - Cisco switch must be configured to automatically audit account removal actions.
+      ios_config:
+        lines:
+          - archive
+          - log config
+          - logging enable
+          - exit
+          - exit
+    - name: V-220573 - Cisco switch must be configured to automatically audit account disabling actions.
+      ios_config:
+        lines:
+          - archive
+          - log config
+          - logging enable
+          - exit
+          - exit
+    - name: V-220572 - Cisco switch must be configured to automatically audit account modification.
+      ios_config:
+        lines:
+          - archive
+          - log config
+          - logging enable
+          - exit
+          - exit
+    - name: V-220571 - Cisco switch must be configured to automatically audit account creation.
+      ios_config:
+        lines:
+          - archive
+          - log config
+          - logging enable
+          - exit
+          - exit
+    - name: V-220570 - Cisco switch must be configured to limit the number of concurrent management sessions to an organization-defined number.
+      ios_config:
+        lines:
+          - ip http max-connections 2
+          - line vty 0 1
+          - transport input ssh
+          - line vty 2 4
+          - transport input none
+          - exit
