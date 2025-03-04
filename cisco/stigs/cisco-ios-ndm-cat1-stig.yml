@@ -1,0 +1,68 @@
+---
+- name: Cisco IOS NDM Cat 1 STIG
+  hosts: cisco
+  gather_facts: false
+  tasks:
+    - name: V-220595 - Cisco switch must only store cryptographic representations of passwords.
+      ios_config:
+        lines:
+          - service password-encryption
+          - enable secret SECURE_SECRET
+    - name: V-220585 - Cisco switch must be configured to prohibit the use of all unnecessary and non-secure functions and services.
+      ios_config:
+        lines:
+          - no boot network
+          - no ip boot server
+          - no ip bootp server
+          - no ip dns server
+          - no ip identd
+          - no ip finger
+          - no ip http server
+          - no ip rcmd rcp-enable
+          - no service config
+          - no service finger
+          - no service tcp-small-servers
+          - no service udp-small-servers
+          - no service pad
+          - no service call-home
+    - name: V-220621 - Cisco switch must be running an IOS release that is currently supported by Cisco Systems.
+      ios_config:
+        lines:
+          - do show version
+    - name: V-220620 - Cisco switch must be configured to send log data to at least two central log servers for the purpose of forwarding alerts to the administrators and the information system security officer (ISSO).
+      ios_config:
+        lines:
+          - logging host x.x.x.x
+          - logging host y.y.y.y
+    - name: V220617 - Cisco switch must be configured to use at least two authentication servers to authenticate users prior to granting administrative access.
+      ios_config:
+        lines:
+          - radius host x.x.x.x key SECURE_KEY
+          - radius host y.y.y.y key SECURE_KEY
+          - aaa authentication CONSOLE local
+          - aaa authentication login LOGIN_AUTHENTICATION group radius local
+          - line vty 0 1
+          - login authentication LOGIN_AUTHENTICATION
+          - exit
+          - line con 0
+          - login authentication CONSOLE
+          - exit
+          - ip http authentication aaa login-authentication LOGIN_AUTHENTICATION
+    - name: V-220608 - Cisco switch must be configured to implement cryptographic mechanisms to protect the confidentiality of remote maintenance sessions.
+      ios_config:
+        lines:
+          - ip ssh server algorithm encryption aes256-ctr aes192-ctr aes128-ctr
+    - name: V220607 - Cisco switch must be configured to use FIPS-validated Keyed-Hash Message Authentication Code (HMAC) to protect the integrity of remote maintenance sessions.
+      ios_config:
+        lines:
+          - ip ssh version 2
+          - ip ssh server algorithm mac hmac-sha2-512 hmac-sha2-256
+    - name: V-220596 - Cisco switch must be configured to terminate all network connections associated with device management after five minutes of inactivity.
+      ios_config:
+        lines:
+          - line vty 0 1
+          - exec-timeout 5 0
+          - exit
+          - line con 0
+          - exec-timeout 5 0
+          - ip http timeout-policy idle 300 life 100 requests 30
