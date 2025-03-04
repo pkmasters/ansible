@@ -1,0 +1,124 @@
+---
+- name: Cisco IOS XE L2S Cat 2 STIG
+  hosts: cisco
+  gather_facts: false
+  tasks:
+    - name: V-220672 - Cisco switch must have the native VLAN assigned to an ID other than the default VLAN for all 802.1q trunk links.
+      ios_config:
+        lines:
+          - int g0/12
+          - switchport trunk native vlan 999
+          - exit
+    - name: V-220671 - Cisco switch must have all user-facing or untrusted ports configured as access switch ports.
+      ios_config:
+        lines:
+          - int range g0/1-10
+          - switchport mode access
+          - exit
+    - name: V-220670 - Cisco switch must not use the default VLAN for management traffic.
+      ios_config:
+        lines:
+          - int vlan 10
+          - ip add x.x.x.x y.y.y.y
+          - no shut
+          - exit
+    - name: V-220669 - Cisco switch must have the default VLAN pruned from all trunk ports that do not require it.
+      ios_config:
+        lines:
+          - int g0/12
+          - switchport trunk allowed vlan except 1
+          - exit
+    - name: V-220668 - Cisco switch must not have the default VLAN assigned to any host-facing switch ports.
+      ios_config:
+        lines:
+          - int range g0/1-10
+          - switchport access vlan 20
+          - exit
+    - name: V-220667 - Cisco switch must have all disabled switch ports assigned to an unused VLAN.
+      ios_config:
+        lines:
+          - int range g0/1-10
+          - switchport access vlan 666
+          - exit
+          - int g0/12
+          - switchport trunk allowed vlan except 666
+          - exit
+    - name: V-220666 - Cisco switch must have all trunk links enabled statically.
+      ios_config:
+        lines:
+          - int g0/12
+          - switchport mode trunk
+          - switchport nonegotiate
+          - exit
+    - name: V-220665 - Cisco switch must enable Unidirectional Link Detection (UDLD) to protect against one-way connections.
+      ios_config:
+        lines:
+          - udld enable
+    - name: V-220664 - Cisco switch must implement Rapid STP where VLANs span multiple switches with redundant links.
+      ios_config:
+        lines:
+          - spanning-tree mode rapid-pvst
+    - name: V-220661 - Cisco switch must have Dynamic Address Resolution Protocol (ARP) Inspection (DAI) enabled on all user VLANs.
+      ios_config:
+        lines:
+          - ip arp inspection vlan 10,20
+    - name: V-220660 - Cisco switch must have IP Source Guard enabled on all user-facing or untrusted access switch ports.
+      ios_config:
+        lines:
+          - int range g0/1-9
+          - ip verify source
+          - exit
+    - name: V-220659 - Cisco switch must have DHCP snooping for all user VLANs to validate DHCP messages from untrusted sources.
+      ios_config:
+        lines:
+          - ip dhcp snooping
+          - ip dhcp snooping vlan 10,20
+    - name: V-220658 - Cisco switch must have Unknown Unicast Flood Blocking (UUFB) enabled.
+      ios_config:
+        lines:
+          - int range g0/1-10
+          - switchport block unicast
+          - exit
+    - name: V-220657 - Cisco switch must have STP Loop Guard enabled.
+      ios_config:
+        lines:
+          - spanning-tree loopguard default
+    - name: V-220656 - Cisco switch must have BPDU Guard enabled on all user-facing or untrusted access switch ports.
+      ios_config:
+        lines:
+          - int range g0/1-9
+          - spanning-tree bpduguard enable
+          - exit
+    - name: V-2206 - Cisco switch must manage excess bandwidth to limit the effects of packet flooding types of denial-of-service (DoS) attacks. Applied to core-layer-facing interface.
+      ios_config:
+        lines:
+          - class-map match-all C2_VOICE
+          - match ip dscp 47
+          - class-map match-all VOICE
+          - match ip dscp ef
+          - class-map match-all VIDEO
+          - match ip dscp af41
+          - class-map match-all PREFERRED_DATA
+          -  match ip dscp af33
+          - exit
+          - policy-map QOS_POLICY_SWITCHPORT
+          - class C2_VOICE
+          - priority level 1 10
+          - class VOICE
+          - priority level 2 15
+          - class VIDEO
+          - bandwidth percent 25
+          - class PREFERRED_DATA
+          - bandwidth percent 25
+          - class class-default
+          - bandwidth percent 25
+          - exit
+          - exit
+          - int g0/12
+          - service-policy output QOS_POLICY_SWITCHPORT
+          - exit
+    - name: V-220650 - Cisco switch must authenticate all VLAN Trunk Protocol (VTP) messages with a hash function using the most secured cryptographic algorithm available.
+      ios_config:
+        lines:
+          - vtp password SECURE_PASSWORD
+
