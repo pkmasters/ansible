@@ -12,6 +12,7 @@
     peer_preshared: "preshared-key"
     peer_endpoint: "pivpn-endpoint"
     peer_allowed: "allowed-ip"
+    wg_int: "wireguard-interface"
 
   tasks:
     - name: Ensure the system is updated
@@ -35,31 +36,31 @@
     - name: Add user to sudoers for wg-quick commands
       lineinfile:
         path: /etc/sudoers
-        line: "{{ ansible_user }} ALL=(ALL) NOPASSWD: /usr/bin/wg-quick up wg0"
+        line: "{{ ansible_user }} ALL=(ALL) NOPASSWD: /usr/bin/wg-quick up {{ wg_int }}"
         validate: '/usr/sbin/visudo -cf %s'
 
     - name: Add user to sudoers for wg-quick stop command
       lineinfile:
         path: /etc/sudoers
-        line: "{{ ansible_user }} ALL=(ALL) NOPASSWD: /usr/bin/wg-quick down wg0"
+        line: "{{ ansible_user }} ALL=(ALL) NOPASSWD: /usr/bin/wg-quick down {{ wg_int }}"
 
     - name: Install curl if not installed
       apt:
         name: curl
         state: present
 
-    - name: Verify public IP address
+    - name: Verify public IPv4 address
       command: curl icanhazip.com -4
       register: public_ip
       changed_when: false
 
-    - name: Display public IP address
+    - name: Display public IPv4 address
       debug:
         var: public_ip.stdout
 
     - name: Create WireGuard configuration file
       copy:
-        dest: /etc/wireguard/wg0.conf
+        dest: /etc/wireguard/{{ wg_int }}.conf
         content: |
           [Interface]
           PrivateKey = {{ int_private }}
@@ -74,12 +75,12 @@
         mode: '0600'
 
     - name: Start WireGuard interface
-      command: wg-quick up wg0
+      command: wg-quick up {{ wg_int }}
       register: wg_start
       changed_when: wg_start.rc == 0
 
     - name: Show the created interface
-      command: ip a | grep wg0
+      shell: "ip a | grep {{ wg_int }}"
       register: ip_output
       changed_when: false
 
