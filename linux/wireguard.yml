@@ -84,7 +84,7 @@
 
     - name: Display interface information
       debug:
-        var: ip_output.stdout
+        var: ip_output.stdout_lines
 
     - name: Show routing table
       command: ip route show
@@ -93,4 +93,4 @@
 
     - name: Display routing table
       debug:
-        var: route_output.stdout
+        var: route_output.stdout_lines
