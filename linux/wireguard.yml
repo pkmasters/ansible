@@ -1,0 +1,96 @@
+---
+- name: Automate WireGuard Client Install
+  hosts: debian
+  become: yes
+  gather_facts: true
+  vars:
+    int_private: "private-key"
+    int_address: "pivpn-local-address"
+    int_dns: "dns-servers"
+    peer_public: "public-key"
+    peer_preshared: "preshared-key"
+    peer_endpoint: "pivpn-endpoint"
+    peer_allowed: "allowed-ip"
+
+  tasks:
+    - name: Ensure the system is updated
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Install WireGuard
+      apt:
+        name: wireguard
+        state: present
+
+    - name: Install resolvconf
+      apt:
+        name: resolvconf
+        state: present
+
+    - name: Reboot the system
+      reboot:
+
+    - name: Add user to sudoers for wg-quick commands
+      lineinfile:
+        path: /etc/sudoers
+        line: "{{ ansible_user }} ALL=(ALL) NOPASSWD: /usr/bin/wg-quick up wg0"
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Add user to sudoers for wg-quick stop command
+      lineinfile:
+        path: /etc/sudoers
+        line: "{{ ansible_user }} ALL=(ALL) NOPASSWD: /usr/bin/wg-quick down wg0"
+
+    - name: Install curl if not installed
+      apt:
+        name: curl
+        state: present
+
+    - name: Verify public IP address
+      command: curl icanhazip.com -4
+      register: public_ip
+      changed_when: false
+
+    - name: Display public IP address
+      debug:
+        var: public_ip.stdout
+
+    - name: Create WireGuard configuration file
+      copy:
+        dest: /etc/wireguard/wg0.conf
+        content: |
+          [Interface]
+          PrivateKey = {{ int_private }}
+          Address = {{ int_address }}
+          DNS = {{ int_dns }}
+
+          [Peer]
+          PublicKey = {{ peer_public }}
+          PresharedKey = {{ peer_preshared }}
+          Endpoint = {{ peer_endpoint }}
+          AllowedIPs = {{ peer_allowed }}
+        mode: '0600'
+
+    - name: Start WireGuard interface
+      command: wg-quick up wg0
+      register: wg_start
+      changed_when: wg_start.rc == 0
+
+    - name: Show the created interface
+      command: ip a
+      register: ip_output
+      changed_when: false
+
+    - name: Display interface information
+      debug:
+        var: ip_output.stdout
+
+    - name: Show routing table
+      command: ip route show
+      register: route_output
+      changed_when: false
+
+    - name: Display routing table
+      debug:
+        var: route_output.stdout
