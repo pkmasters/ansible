@@ -79,7 +79,7 @@
       changed_when: wg_start.rc == 0
 
     - name: Show the created interface
-      command: ip a
+      command: ip a | grep wg0
       register: ip_output
       changed_when: false
 
