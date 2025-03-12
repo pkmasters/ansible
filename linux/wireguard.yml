@@ -1,13 +1,14 @@
 ---
-- name: Automate WireGuard Client Install
+- name: Automate WireGuard Client Install (Using PiVPN Server)
   hosts: debian
   become: yes
   gather_facts: true
+  # these variables are gathered from pivpn(pivpn -a)
   vars:
     int_private: "private-key"
     int_address: "pivpn-local-address"
     int_dns: "dns-servers"
-    peer_public: "public-key"
+    peer_public: "server-public-key"
     peer_preshared: "preshared-key"
     peer_endpoint: "pivpn-endpoint"
     peer_allowed: "allowed-ip"
