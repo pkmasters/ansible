@@ -3,7 +3,7 @@
   hosts: localhost
   gather_facts: yes
   vars_files:
-    - /path/to/pw_list.yml # You can also create another variable file foe the below variables as well!
+    - /path/to/pw_list.yml # You can also create another variable file for the below variables as well!
   vars:
     keycloak_url: "https://keycloak.tld" # Change to your keycloak url with no trailing /
     keycloak_auth_realm: master
@@ -17,7 +17,7 @@
     email_password: email-password # Email auth password
     email_subject: Your Account Was Successfully Created! # Change to your subject line
     email_from: Company Name <support@domain.com> # Change to your from email address
-    email_secure: starttls/always # Best to use starttls
+    email_secure: starttls/always # Best to use starttls with port 587 if supported by provider
 
   vars_prompt:
     - name: user_email
