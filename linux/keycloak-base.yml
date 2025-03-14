@@ -1,0 +1,26 @@
+---
+- name: Ansible Automation Playbook - Keycloak User Creation (BASE)
+  hosts: localhost
+  gather_facts: yes
+  tasks:
+    - name: Authenticate and create the user
+      community.general.keycloak_user:
+        auth_keycloak_url: "https://keycloak.tld"
+        auth_username: admin-username
+        auth_password: admin-password
+        auth_realm: master
+        realm: realm123 # Change this if you have a difference realm or remove if using master realm
+        username: username
+        firstName: first
+        lastName: last
+        email: user@domain.tld
+        enabled: true
+        emailVerified: false # Will prompt user to verify email after logging in
+        credentials:
+          - type: password
+            value: user-password
+            temporary: true # Will prompt user to change password after logging in
+        groups:
+          - name: group
+            state: present
+        state: present
