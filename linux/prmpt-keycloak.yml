@@ -1,0 +1,97 @@
+---
+- name: Interactive Playbook - Create a User in Keycloak and Send Email to New User with Login Details
+  hosts: localhost
+  gather_facts: yes
+  vars_files:
+    - /path/to/pw_list.yml # You can also create another variable file foe the below variables as well!
+  vars:
+    keycloak_url: "https://keycloak.tld" # Change to your keycloak url with no trailing /
+    keycloak_auth_realm: master
+    keycloak_realm: realm123  # Change this if you have a difference realm or remove if using master realm
+    keycloak_admin_user: admin-user # Change to your admin user
+    keycloak_admin_password: admin-password # Change to your admin password
+    keycloak_group: group  # Change to your desired group
+    email_server: smtp.domain.com # Change to mail service provider fqdn
+    email_port: 587/465/25 # Change to whatever mail provider's port in use
+    email_user: email-username # Email auth user
+    email_password: email-password # Email auth password
+    email_subject: Your Account Was Successfully Created! # Change to your subject line
+    email_from: Company Name <support@domain.com> # Change to your from email address
+    email_secure: starttls/always # Best to use starttls
+
+  vars_prompt:
+    - name: user_email
+      prompt: "Enter the User's Email (also username)" # I prefer email as username, you can add another prompt for username if you would like to
+      private: no
+    - name: user_first_name
+      prompt: "Enter the User's First Name"
+      private: no
+    - name: user_last_name
+      prompt: "Enter the User's Last Name"
+      private: no
+
+  tasks:
+    - name: Picks a random password from pw_list.yml
+      set_fact:
+        user_password: "{{ password_list | random }}"
+
+    - name: Create Keycloak user based on var input
+      community.general.keycloak_user:
+        auth_keycloak_url: "{{ keycloak_url }}"
+        auth_username: "{{ keycloak_admin_user }}"
+        auth_password: "{{ keycloak_admin_password }}"
+        auth_realm: "{{ keycloak_auth_realm }}"
+        realm: "{{ keycloak_realm }}"
+        username: "{{ user_email }}"
+        firstName: "{{ user_first_name }}"
+        lastName: "{{ user_last_name }}"
+        email: "{{ user_email }}"
+        enabled: true
+        emailVerified: false
+        credentials:
+          - type: password
+            value: "{{ user_password }}"
+            temporary: true
+        groups:
+          - name: "{{ keycloak_group }}"
+            state: present
+        state: present
+
+    - name: Debug created user details
+      ansible.builtin.debug:
+        msg:
+          - "The User: {{ user_email }} was created successfully!"
+          - "Assigned to group: {{ keycloak_group }}"
+          - "Generated Password: {{ user_password }}"
+
+    - name: Send confirmation email with temp login details to the new user
+      community.general.mail:
+        host: "{{ email_server }}"
+        port: "{{ email_port }}"
+        username: "{{ email_user }}"
+        password: "{{ email_password }}"
+        to: "{{ user_email }}"
+        subject: "{{ email_subject }}"
+        body: |
+          Hello {{ user_first_name }},
+
+          Welcome to Keycloak SSO! Your account has been successfully created.
+
+          Here are your temporary login details:
+
+          - Username: {{ user_email }}
+          - Temporary Password: {{ user_password }}
+
+          You can login at: https://service.tld
+
+          Please ensure to follow the new account login process for security purposes.
+
+          You will be prompted to change your password and verify your email address.
+
+          If you have any questions, feel free to reach us from <{{ email_user }}>.
+
+
+          Best Regards,
+          COMPANY Support Team
+        from: "{{ email_from }}"
+        secure: "{{ email_secure }}"
