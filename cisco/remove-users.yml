@@ -1,0 +1,13 @@
+---
+- name: Configure the local users on Cisco Switches
+  hosts: access
+  gather_facts: no
+  tasks:
+    - name: Remove 'cisco.na' local user from switch
+      cisco.ios.user:
+        name: "cisco.na"
+        state: absent
+  
+    - name: Save running-config to startup-config
+      cisco.ios.ios_config:
+        save_when: always
