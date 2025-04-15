@@ -1,0 +1,28 @@
+---
+- name: Cisco IOS/XE Radius Configuration
+  hosts: cisco
+  gather_facts: false
+  tasks:
+    - name: Cisco switch must uniquely identify and authenticate all network-connected endpoint devices before establishing any connection.
+      ios_config:
+        lines:
+          - aaa new-model
+          - radius server radius1
+          - address ipv4 x.x.x.x auth-port 1812 acct-port 1813
+          - key 7 xxx
+          - exit
+          - radius server radius2
+          - address ipv4 x.x.x.y auth-port 1812 acct-port 1813
+          - key 7 xxx
+          - exit
+          - ip radius source-interface VlanXX
+          - aaa authentication login default group radius local
+          - aaa authorization exec default group radius local
+         #- aaa authentication login default group RADIUS_SERVERS local
+         #- aaa authorization exec default group RADIUS_SERVERS local
+         #- aaa authentication dot1x default group RADIUS_SERVERS
+         #- dot1x system-auth-control
+  
+    - name: Save running-config to startup-config
+      cisco.ios.ios_config:
+        save_when: always
