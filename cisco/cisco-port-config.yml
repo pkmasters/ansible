@@ -31,7 +31,7 @@
       private: false
 
     - name: device_type
-      prompt: "If configuring VLAN 120, specify device type (workstation/phone) - press enter if not VLAN 120"
+      prompt: "If configuring VLAN XXX, specify device type (XYZ/ABC) - press enter if not VLAN XXX"
       private: false
 
     - name: trunk_port_selection
