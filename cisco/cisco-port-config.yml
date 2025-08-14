@@ -1,6 +1,24 @@
 ---
-- name: Interactive Playbook - Cisco IOS/IOS XE Port Configurator
-  hosts: cisco
+- name: 1 Interactive Playbook - Select Host
+  hosts: localhost
+  gather_facts: false
+  vars_prompt:
+    - name: target_switch
+      prompt: Enter the hostname (ansible inv hostname)
+      private: false
+
+  tasks:
+    - name: Add the selected switch to a new group
+      add_host:
+        name: "{{  target_switch }}"
+        groups: dynamic_switch
+
+    - name: Display the hostname of the selected switch
+      ansible.builtin.debug:
+        msg: "SWITCH HOSTNAME: {{ target_switch }}"
+
+- name: 2 Interactive Playbook - Cisco IOS/IOS XE Port Configurator
+  hosts: dynamic_switch
   gather_facts: false
   vars_prompt:
 
@@ -10,6 +28,10 @@
 
     - name: vlan_access_port_selection
       prompt: Enter the VLAN would like to access those interface(s) (eg. 10,20)
+      private: false
+
+    - name: device_type
+      prompt: "If configuring VLAN 120, specify device type (workstation/phone) - press enter if not VLAN 120"
       private: false
 
     - name: trunk_port_selection
@@ -39,17 +61,26 @@
           - desc {{ description }} #sets description based on VLAN
       vars:
         description: >
-          {% if vlan_access_port_selection|int == XXX %}
-            DAC Location
-          {% elif vlan_access_port_selection|int in [XX,XX] %}
-            ACB Location
-          {% elif vlan_access_port_selection|int == XXX %}
-            ABC Location
+          {% if vlan_access_port_selection|int == 123 %}
+          DeviceX Location
+          {% elif vlan_access_port_selection|int in [123,1234] %}
+          DeviceY Location
+          {% elif vlan_access_port_selection|int == 123 and device_type|lower == 'xx' %}
+          DeviceZ Location
+          {% elif vlan_access_port_selection|int == 123 and device_type|lower == 'xx' %}
+          DeviceA Location
+          {% elif vlan_access_port_selection|int == 123 %}
+          VLAN XXX Device
           {% else %}
-            Access Port
+          Access Port
           {% endif %}
-      when: access_port_selection is defined and access_port_selection !="" and access_port_selection !="0"
-      when: vlan_access_port_selection is defined and vlan_access_port_selection !="" and vlan_access_port_selection !="0"
+      when:
+        - access_port_selection is defined
+        - access_port_selection != ""
+        - access_port_selection != "0"
+        - vlan_access_port_selection is defined
+        - vlan_access_port_selection != ""
+        - vlan_access_port_selection != "0"
     
     - name: Configure the Ethernet Trunk Port(s)
       cisco.ios.ios_config:
@@ -61,16 +92,26 @@
           - no shutdown #enables the port
           - description Trunk to Location #sets a description
           - switchport noneg #force static trunking
-      when: trunk_port_selection is defined and trunk_port_selection != "" and trunk_port_selection != "0"
-      when: vlan_trunk_port_selection is defined and vlan_trunk_port_selection !="" and vlan_trunk_port_selection !="0"
+      when:
+        - trunk_port_selection is defined
+        - trunk_port_selection != ""
+        - trunk_port_selection != "0"
+        - vlan_trunk_port_selection is defined
+        - vlan_trunk_port_selection != ""
+        - vlan_trunk_port_selection != "0"
 
     - name: Configure the Native VLAN on the Trunk(s)
       ios_config:
         lines:
           - interface range {{ trunk_port_selection }} #selects the range of interfaces
           - switchport trunk native vlan {{ native_trunk_port_selection | int }} #assigns the native vlan if there is one
-      when: vlan_trunk_port_selection is defined and vlan_trunk_port_selection !="" and vlan_trunk_port_selection !="0"
-      when: native_trunk_port_selection is defined and native_trunk_port_selection != "" and native_trunk_port_selection != "0"
+      when:
+        - native_trunk_port_selection is defined
+        - native_trunk_port_selection != ""
+        - native_trunk_port_selection != "0"
+        - trunk_port_selection is defined
+        - trunk_port_selection =! ""
+        - trunk_port_selection =! "0"
 
     - name: Disable the Remaining Ethernet Port(s)
       ios_config:
@@ -78,4 +119,12 @@
           - interface range {{ shut_port_selection }} #selects the range of interfaces
           - shutdown #admin disables the port
           - desc OPEN Port #sets the description
-      when: shut_port_selection is defined and shut_port_selection != "" and shut_port_selection != "0"
+      when:
+        - shut_port_selection is defined
+        - shut_port_selection != ""
+        - shut_port_selection != "0"
+      
+    - name: Pause to view output
+      ansible.builtin.pause:
+        prompt: "Press Enter"
+        echo: no
