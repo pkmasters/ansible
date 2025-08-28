@@ -1,0 +1,46 @@
+---
+- name: 1 - Select switch host
+  hosts: localhost
+  gather_facts: false
+  vars_prompt:
+    - name: target_switch
+      prompt: Enter the hostname (ansible inv hostname)
+      private: false
+  tasks:
+    - name: Add the selected switch to a new group
+      add_host:
+        name: "{{  target_switch }}"
+        groups: dynamic_switch
+
+#    - name: Display the hostname of the selected switch
+#      ansible.builtin.debug:
+#        msg: "SWITCH HOSTNAME: {{ target_switch }}"
+
+- name: 2 - Run a show int status to display all ports
+  hosts: dynamic_switch
+  gather_facts: false
+  tasks:
+    - name: Run show int status command
+      ios_command:
+        commands: show interface status
+      register: command_out
+
+    - name: Display the show int status command output
+      debug:
+        msg: "{{ command_out.stdout_lines }}"
+
+- name: 3 - Select ports and configure port-security
+  hosts: dynamic_switch
+  gather_facts: false
+  vars_prompt:
+    - name: access_ports
+      prompt: Enter the access ports to apply port-security
+      private: false
+  tasks:
+    - name: Enable port-security sticky
+      ios_config:
+        lines:
+          - switchport port-security
+          - switchport port-security mac sticky
+        parents:
+          - interface range {{ access_ports  }}
