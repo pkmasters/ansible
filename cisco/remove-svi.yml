@@ -1,0 +1,43 @@
+---
+- name: 1 - Select Host
+  hosts: localhost
+  gather_facts: false
+  vars_prompt:
+    - name: target_switch
+      prompt: Enter the hostname (ansible inv hostname)
+      private: false
+
+  tasks:
+    - name: Add the selected switch to a new group
+      add_host:
+        name: "{{  target_switch }}"
+        groups: dynamic_switch
+
+    - name: Display the hostname of the selected switch
+      ansible.builtin.debug:
+        msg: "SWITCH HOSTNAME: {{ target_switch }}"
+
+- name: 2 - Remove SVI(s) from Switches
+  hosts: dynamic_switch
+  gather_facts: false
+  tasks:
+    - name: Change Default Gateway
+      ios_config:
+        lines:
+          - ip default-gateway x.x.x.y
+
+    - name: Remove SVI ABC Command
+      ios_config:
+        lines:
+          - no ip address
+        parents: 
+          - int vlan abc
+
+#    - name: Save running-config to startup-config
+#      cisco.ios.ios_config:
+#        save_when: modified
+
+    - name: Pause to view playbook results
+      ansible.builtin.pause:
+        prompt: "Press Enter"
+        echo: no
