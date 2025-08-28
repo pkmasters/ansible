@@ -42,5 +42,7 @@
         lines:
           - switchport port-security
           - switchport port-security mac sticky
+          - switchport port-security max 2
+          - switchport port-security violation shutdown
         parents:
           - interface range {{ access_ports  }}
