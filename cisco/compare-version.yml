@@ -1,0 +1,16 @@
+---
+- name: Ansible Playbook to Check Cisco IOS Firmware Version
+  hosts: cisco
+  vars:
+    upgrade_ios_version: 15.2(7)E12
+  tasks:
+    - name: Cheks the current version and compares to the latest version.
+      ios_facts:
+    - debug:
+        msg:
+        - "Current version is {{ ansible_net_version }}"
+        - "Upgrade image is 15.2(7)E12"
+    - debug:
+        msg:
+        - "Image is not compliant and will be upgraded"
+      when: ansible_net_version != upgrade_ios_version
