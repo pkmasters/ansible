@@ -1,0 +1,31 @@
+---
+- name: Ansible Playbook to copy new firmware file to Cisco switch or router
+  hosts: cisco
+  gather_facts: false
+  tasks:
+    - name: Enables ip scp server
+      ios_config:
+        lines:
+          - ip scp server enable
+
+    - name: Copies the image from Ansible host to Cisco switch or router
+      delegate_to: localhost
+      command: >
+        sshpass -f /path/to/password scp -O /path/to/cisco.bin user@x.x.x.x:cisco.bin
+      vars:
+        ansible_command_timeout: 900
+        ansible_ssh_timeout: 900
+
+    - name: IOS Command to show directory
+      ios_command:
+        commands: dir
+      register: dir_out
+
+    - name: Display dir_out output for verification
+      debug:
+        msg: "{{ dir_out.stdout_lines }}"
+
+    - name: Disables ip scp server
+      ios_config:
+        lines:
+          - no ip scp server enable
