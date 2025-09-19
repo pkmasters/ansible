@@ -16,7 +16,7 @@
     - name: Copies the image from Ansible host to Cisco switch or router
       delegate_to: localhost
       command: >
-        sshpass -f {{ ssh_pass_file }} scp -O {{ image_file }} {{ ssh_user }}@x.x.x.x:{{ image }}
+        sshpass -f {{ ssh_pass_file }} scp -O {{ image_file }} {{ ssh_user }}@{{ ansible_host }}:{{ image }}
       vars:
         ansible_command_timeout: 900
         ansible_ssh_timeout: 900
