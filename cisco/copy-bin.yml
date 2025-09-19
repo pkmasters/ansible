@@ -28,7 +28,7 @@
 
     - name: Verify bin file in directory
       assert:
-        that: "{{ image }} in dir_out.stdout[0]"
+        that: "'{{ image }}' in dir_out.stdout[0]"
         fail_msg: "Image not found in flash"
 
     - name: Disables ip scp server
