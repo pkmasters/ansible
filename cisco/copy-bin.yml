@@ -21,9 +21,10 @@
         commands: dir
       register: dir_out
 
-    - name: Display dir_out output for verification
-      debug:
-        msg: "{{ dir_out.stdout_lines }}"
+   - name: Verify bin file in directory
+     assert:
+       that: "'cisco.bin' in dir_out.stdout[0]"
+       fail_msg: "Image not found in flash"
 
     - name: Disables ip scp server
       ios_config:
