@@ -13,6 +13,10 @@
         lines:
           - ip scp server enable
 
+    - name: Pause for 15 seconds for SCP server to start
+      pause:
+        seconds: 15
+
     - name: Copies the image from Ansible host to Cisco switch or router
       delegate_to: localhost
       command: >
