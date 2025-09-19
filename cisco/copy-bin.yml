@@ -62,3 +62,10 @@
           - command: "reload"
             prompt: "[confirm]"
             answer: "\r"
+
+#    - name: Reload the switch
+#      ansible.netcommon.cli_command:
+#        command: "reload"
+#        prompt: "[confirm]"
+#        answer: "\r"
+
