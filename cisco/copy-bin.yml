@@ -26,10 +26,10 @@
         commands: dir
       register: dir_out
 
-   - name: Verify bin file in directory
-     assert:
-       that: "{{ image }} in dir_out.stdout[0]"
-       fail_msg: "Image not found in flash"
+    - name: Verify bin file in directory
+      assert:
+        that: "{{ image }} in dir_out.stdout[0]"
+        fail_msg: "Image not found in flash"
 
     - name: Disables ip scp server
       ios_config:
