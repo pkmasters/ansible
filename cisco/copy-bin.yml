@@ -39,3 +39,26 @@
       ios_config:
         lines:
           - no ip scp server enable
+
+    - name: Configure new boot path and saves configuration
+      ios_config:
+        lines:
+          - boot system flash:{{  image }}
+        save_when: always
+
+    - name: IOS command to show boot variables
+      ios_command:
+        commands: show boot
+      register: boot_out
+
+    - name: Verify bin file in boot variables
+      assert:
+        that: "'{{ image }}' in boot_out.stdout[0]"
+        fail_msg: "Image not found in boot"
+
+    - name: Reloads switch
+      ios_command:
+        commands:
+          - command: "reload"
+            prompt: "[confirm]"
+            answer: "\r"
