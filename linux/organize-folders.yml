@@ -1,0 +1,29 @@
+---
+- name: Move backup folders into a Main folder
+  hosts: localhost
+  gather_facts: false
+  vars:
+    user: "username"
+  tasks:
+    - name: Sets the folder date variable for the month-year folder
+      set_fact:
+        date_folder: "{{ lookup('pipe', 'date +%B-%Y') }}"
+
+    - name: Creates the Month-Year folder for access group
+      file:
+        path: "/path/to/folders/{{ date_folder }}"
+        state: directory
+        mode: '0755'
+        group: '{{ user }}'
+        owner: '{{ user }}'
+
+    - name: Find all daily backup folders for current month
+      find:
+        paths: "/path/to/folders"
+        file_type: directory
+        patterns: "{{ lookup('pipe','date +%Y-%m') }}-*"
+      register: daily_folders
+
+    - name: Move each daily folder into Month-Year folder
+      command: mv "{{ item.path }}" "/path/to/folders/{{ date_folder }}/"
+      loop: "{{ daily_folders.files }}"
