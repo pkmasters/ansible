@@ -86,10 +86,9 @@
        delay: 60
        timeout: 900
      delegate_to: localhost
-   
+
    - name: Removes OLD image from switch
      ios_config:
        lines:
          - delete flash:{{ boot_bin }}
        save_when: always
- 
