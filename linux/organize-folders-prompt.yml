@@ -12,7 +12,7 @@
       prompt: Enter the format of the backup folder (ex. 2025-09)
       private: false
   tasks:
-    - name: Creates the Month-Year folder for access group
+    - name: Creates the Month-Year folder for current month
       file:
         path: "/path/to/folder/{{ date_folder }}"
         state: directory
