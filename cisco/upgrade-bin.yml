@@ -90,5 +90,5 @@
    - name: Removes OLD image from switch
      ios_config:
        lines:
-         - delete flash:{{ boot_bin }}
+         - do delete flash:{{ boot_bin }}
        save_when: always
