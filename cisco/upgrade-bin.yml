@@ -8,30 +8,30 @@
     ssh_user: "user"
     ssh_pass_file: "/path/to/password"
   tasks:
-    - name: Enables ip scp server
+    - name: Enables the SCP server
       ios_config:
         lines:
           - ip scp server enable
 
-    - name: Pause for 15 seconds for SCP server to start
+    - name: Pause 15 seconds for SCP server to start
       pause:
         seconds: 15
 
-    - name: Gather CURRENT boot info
+    - name: Gathers the CURRENT boot info to variable
       ios_command:
         commands:
           - show boot
       register: bootinfo
 
-    - name: Extracts CURRENT bin file
+    - name: Extracts the CURRENT bin file
       set_fact:
         boot_bin: "{{ bootinfo.stdout[0] | regex_search('flash[:/][^ ]+\\.bin') | regex_replace('^flash[:/]', '') }}"
 
-    - name: Show extracted CURRENT bin file
+    - name: Display the CURRENT bin file
       debug:
         var: boot_bin
 
-    - name: Copy NEW bin file from Ansible host to Cisco switch or router
+    - name: Copies NEW image from Ansible host to Cisco switch
       delegate_to: localhost
       command: >
         sshpass -f {{ ssh_pass_file }} scp -O {{ image_file }} {{ ssh_user }}@{{ ansible_host }}:{{ image }}
@@ -39,47 +39,57 @@
         ansible_command_timeout: 900
         ansible_ssh_timeout: 900
 
-    - name: IOS Command to show directory
+    - name: Show directory into variable
       ios_command:
         commands: dir
       register: dir_out
 
-    - name: Verify NEW bin file in directory
+    - name: Verify NEW image was copied into the flash dir
       assert:
         that: "'{{ image }}' in dir_out.stdout[0]"
         fail_msg: "Image not found in flash"
 
-    - name: Disables ip scp server
+    - name: Disables the SCP server
       ios_config:
         lines:
           - no ip scp server enable
 
-    - name: Configure NEW boot path and SAVES configuration
+    - name: Configure NEW boot path and saves configuration
       ios_config:
         lines:
-          - boot system flash:{{  image }}
+          - boot system flash:{{ image }}
         save_when: always
 
-    - name: IOS command to show boot variables
+    - name: Show boot info  into a variable
       ios_command:
         commands: show boot
       register: boot_out
 
-    - name: Verify NEW bin file in boot variables
+    - name: Verify NEW bin file in boot path
       assert:
         that: "'{{ image }}' in boot_out.stdout[0]"
-        fail_msg: "Image not found in boot"
+        fail_msg: "Image not found in the boot path"
 
-    - name: Reloads switch
+    - name: Reloads the switch
       ios_command:
         commands:
           - command: "reload"
             prompt: "[confirm]"
             answer: "\r"
+      vars:
+        ansible_command_timeout: 30
 
-#    - name: Reload the switch
-#      ansible.netcommon.cli_command:
-#        command: "reload"
-#        prompt: "[confirm]"
-#        answer: "\r"
-
+   - name: Wait for the switch to RETURN
+     wait_for:
+       host: "{{ inventory_hostname }}"
+       port: 22
+       delay: 60
+       timeout: 900
+     delegate_to: localhost
+   
+   - name: Removes OLD image from switch
+     ios_config:
+       lines:
+         - delete flash:{{ boot_bin }}
+       save_when: always
+ 
