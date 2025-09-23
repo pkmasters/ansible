@@ -25,11 +25,11 @@
 
     - name: Extracts the CURRENT bin file
       set_fact:
-        boot_bin: "{{ bootinfo.stdout[0] | regex_search('flash[:/][^ ]+\\.bin') | regex_replace('^flash[:/]', '') }}"
+        old_boot_bin: "{{ bootinfo.stdout[0] | regex_search('flash[:/][^ ]+\\.bin') | regex_replace('^flash[:/]', '') }}"
 
     - name: Display the CURRENT bin file
       debug:
-        var: boot_bin
+        var: old_boot_bin
 
     - name: Copies NEW image from Ansible host to Cisco switch
       delegate_to: localhost
@@ -90,5 +90,5 @@
    - name: Removes OLD image from switch
      ios_command:
        commands:
-         - command: delete /force flash:{{ boot_bin }}
+         - command: delete /force flash:{{ old_boot_bin }}
        save_when: always
