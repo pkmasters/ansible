@@ -13,9 +13,9 @@
         lines:
           - ip scp server enable
 
-    - name: Pause 15 seconds for SCP server to start
+    - name: Pause 30 seconds for SCP server to start
       pause:
-        seconds: 15
+        seconds: 30
 
     - name: Gathers the CURRENT boot info to variable
       ios_command:
@@ -88,7 +88,7 @@
      delegate_to: localhost
 
    - name: Removes OLD image from switch
-     ios_config:
-       lines:
-         - do delete flash:{{ boot_bin }}
+     ios_command:
+       commands:
+         - command: delete /force flash:{{ boot_bin }}
        save_when: always
