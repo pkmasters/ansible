@@ -81,7 +81,7 @@
 
    - name: Wait for the switch to RETURN
      wait_for:
-       host: "{{ inventory_hostname }}"
+       host: "{{ ansible_host }}"
        port: 22
        delay: 60
        timeout: 900
