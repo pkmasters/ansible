@@ -9,7 +9,7 @@
       set_fact:
         date_folder: "{{ lookup('pipe', 'date +%B-%Y') }}"
 
-    - name: Creates the Month-Year folder for access group
+    - name: Creates the Month-Year folder for current month
       file:
         path: "/path/to/folders/{{ date_folder }}"
         state: directory
