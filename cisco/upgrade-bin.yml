@@ -87,8 +87,8 @@
        timeout: 900
      delegate_to: localhost
 
-   - name: Removes OLD image from switch
-     ios_command:
-       commands:
-         - command: delete /force flash:{{ old_boot_bin }}
-       save_when: always
+  - name: Removes OLD image from switch
+    ios_config:
+      lines:
+        - do delete /force flash:{{ image }}
+      save_when: always
