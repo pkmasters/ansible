@@ -1,0 +1,32 @@
+---
+- name: Move backup logs into a Main folder
+  hosts: localhost
+  gather_facts: false
+  vars:
+    user: "username"
+  vars_prompt:
+    - name: date_folder
+      prompt: Enter the month and year of the folder
+      private: false
+    - name: backup_log
+      prompt: Enter the format of the backup log file (ex. backuplog_2025-09)
+      private: false
+  tasks:
+    - name: Creates the Month-Year folder for backup month
+      file:
+        path: "/path/to/folder/{{ date_folder }}"
+        state: directory
+        mode: '0755'
+        group: '{{ user }}'
+        owner: '{{ user }}'
+
+    - name: Find all daily backup log files for backup month
+      find:
+        paths: "/path/to/folder"
+        file_type: file
+        patterns: "{{ backup_log}}-*"
+      register: daily_logs
+
+    - name: Move each daily backup log into month-year folder
+      command: mv "{{ item.path }}" "/path/to/folder/{{ date_folder }}/"
+      loop: "{{ daily_logs.files }}"
