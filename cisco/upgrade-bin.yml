@@ -34,7 +34,7 @@
     - name: Copies NEW image from Ansible host to Cisco switch
       delegate_to: localhost
       command: >
-        sshpass -f {{ ssh_pass_file }} scp -O {{ image_file }} {{ ssh_user }}@{{ ansible_host }}:{{ image }}
+        sshpass -f {{ ssh_pass_file }} scp -o StrictHostKeyChecking=no -O {{ image_file }} {{ ssh_user }}@{{ ansible_host }}:{{ image }}
       vars:
         ansible_command_timeout: 1020
         ansible_ssh_timeout: 1020
