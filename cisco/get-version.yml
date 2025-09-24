@@ -1,0 +1,11 @@
+---
+- name: Get list of Cisco IOS firmware on switches
+  hosts: cisco
+  gather_facts: false
+  tasks:
+    - name: Gather IOS Facts
+      ios_facts:
+      register: facts_out
+    - name: Outputs firmware version
+      debug:
+        msg: "{{ inventory_hostname }}'s version is {{ facts_out.ansible_facts.ansible_net_version }}"
