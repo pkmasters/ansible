@@ -91,5 +91,5 @@
   - name: Removes OLD image from switch
     ios_config:
       lines:
-        - do delete /force flash:{{ image }}
+        - do delete /force flash:{{ old_boot_bin }}
       save_when: always
