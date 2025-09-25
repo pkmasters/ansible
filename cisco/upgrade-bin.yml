@@ -31,7 +31,7 @@
       debug:
         var: old_boot_bin
 
-    - name: Copies NEW image from Ansible host to Cisco switch
+    - name: Copies NEW image from Ansible host to Cisco switch (REQUIRES NO SWITCH LOGIN BANNER)
       delegate_to: localhost
       command: >
         sshpass -f {{ ssh_pass_file }} scp -o StrictHostKeyChecking=no -O {{ image_file }} {{ ssh_user }}@{{ ansible_host }}:{{ image }}
