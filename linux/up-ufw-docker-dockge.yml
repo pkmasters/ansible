@@ -1,5 +1,5 @@
 ---
-- name: Simple Playbook to Update Server, Install/Configure UFW, Install Docker Engine/Docker Compose, and Deploy Dockge
+- name: Simple Playbook to Update Server, Install/Configure UFW, Install Docker Engine/Docker Compose, and Deploy Dockge on Ubuntu Server
   hosts: ubuntu
   become: yes
   
