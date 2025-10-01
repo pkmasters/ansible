@@ -1,0 +1,71 @@
+- name: Setup SSH with key-based authentication
+  hosts: localhost
+  vars:
+    local_user: user        # the user on this control machine
+    remote_user: user1            # the user on the remote host
+    remote_host: inventory_hostname             # the remote host ansible hostname
+    ssh_key_bits: 4096
+    ssh_key_path: "/home/{{ local_user }}/.ssh/id_rsa"
+
+  tasks:
+    # -------------------------------
+    # 1) Generate RSA key pair locally
+    # -------------------------------
+    - name: Generate local SSH key pair
+      openssh_keypair:
+        path: "{{ ssh_key_path }}"
+        type: rsa
+        size: "{{ ssh_key_bits }}"
+        force: no
+        owner: "{{ local_user }}"
+        group: "{{ local_user }}"
+        mode: '0600'
+
+    # -------------------------------
+    # 2) Copy public key to remote host
+    # -------------------------------
+    - name: Ensure remote .ssh directory exists
+      file:
+        path: "/home/{{ remote_user }}/.ssh"
+        state: directory
+        owner: "{{ remote_user }}"
+        group: "{{ remote_user }}"
+        mode: '0700'
+      become: yes
+      delegate_to: "{{ remote_host }}"
+
+    - name: Deploy public key to remote host
+      authorized_key:
+        user: "{{ remote_user }}"
+        state: present
+        key: "{{ lookup('file', ssh_key_path + '.pub') }}"
+      become: yes
+      delegate_to: "{{ remote_host }}"
+
+    # -------------------------------
+    # 3) Disable password authentication
+    # -------------------------------
+    - name: Disable SSH password authentication on remote host
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+        backup: yes
+      become: yes
+      delegate_to: "{{ remote_host }}"
+
+    - name: Disable ChallengeResponseAuthentication on remote host
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?ChallengeResponseAuthentication'
+        line: 'ChallengeResponseAuthentication no'
+        backup: yes
+      become: yes
+      delegate_to: "{{ remote_host }}"
+
+    - name: Restart SSH service on remote host
+      service:
+        name: ssh
+        state: restarted
+      become: yes
+      delegate_to: "{{ remote_host }}"
