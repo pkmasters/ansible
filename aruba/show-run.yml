@@ -1,0 +1,23 @@
+---
+- name: Get Aruba CX Running configuration
+  hosts: aruba
+  gather_facts: false
+
+  tasks:
+    - name: Run show running command
+      arubanetworks.aoscx.aoscx_command:
+        commands:
+          - show running-config
+      register: run
+      vars:
+        ansible_terminal_stderr_re:
+          - pattern: 'randomPatternThatWontMatch'
+
+    - name: Display running configuration
+      debug:
+        msg: "{{ run.stdout[0] }}"
+
+    - name: print show run
+      copy:
+        content: "{{ run.stdout[0] }}"
+        dest: "/etc/backups/{{ inventory_hostname }}_running.txt"
