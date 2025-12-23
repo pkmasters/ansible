@@ -13,10 +13,6 @@
         ansible_terminal_stderr_re:
           - pattern: 'randomPatternThatWontMatch'
 
-    - name: Display running configuration
-      debug:
-        msg: "{{ run.stdout[0] }}"
-
     - name: print show run
       copy:
         content: "{{ run.stdout[0] }}"
