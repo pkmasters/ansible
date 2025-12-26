@@ -1,0 +1,32 @@
+---
+- name: Move monthly backup folders into a main folder
+  hosts: localhost
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Set fact for date variable Year
+      set_fact:
+        date_folder: "Backups-{{ lookup('pipe', 'date +%Y') }}"
+
+    - name: Set fact for backup folder variable
+      set_fact:
+        backup_folder: "{{ lookup('pipe', 'date +%Y') }}"
+
+    - name: Creates Year-Month folder
+      file:
+        path: "/opt/backups/{{ date_folder }}"
+        state: directory
+        mode: '0775'
+        group: 'group'
+        owner: 'sdh'
+
+    - name: Find all daily backup folders for current month
+      ansible.builtin.find:
+        paths: "/opt/backups"
+        file_type: directory
+        patterns: "{{ backup_folder }}-*"
+      register: monthly_folders
+
+    - name: Move each daily backup folder into Month-Year folder
+      command: mv "{{ item.path }}" "/opt/backups/{{ date_folder }}/"
+      loop: "{{ monthly_folders.files }}"
