@@ -1,0 +1,165 @@
+---
+- name: Issue Staging Let's Encrypt Cert via PowerDNS API
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    # Static Domain & Storage Configuration
+    acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory
+    domain_name: "domain.com"
+    cert_dir: "/tmp/certs-staging/domain.com"
+    account_dir: "/tmp/account"
+    pdns_api_key: "secret-api-key"
+    pdns_url: "https://api.domain.com"
+
+  tasks:
+    # ------------------------------------------------------------------
+    # Step 1: Directory & Key Management
+    # ------------------------------------------------------------------
+    - name: Set backup folder name
+      ansible.builtin.set_fact:
+        cert_backup_dir: "{{ cert_dir }}_backup_{{ lookup('pipe', 'date +%Y-%m-%d_%H-%M-%S') }}"
+
+    - name: Check if existing cert directory exists
+      ansible.builtin.stat:
+        path: "{{ cert_dir }}"
+      register: existing_cert_dir
+
+    - name: Backup existing cert directory
+      ansible.builtin.copy:
+        src: "{{ cert_dir }}"
+        dest: "{{ cert_backup_dir }}/"
+        remote_src: true
+        mode: '0700'
+      when: existing_cert_dir.stat.exists
+
+    - name: Remove stale certificate directory
+      ansible.builtin.file:
+        path: "{{ cert_dir }}"
+        state: absent
+
+    - name: Ensure local certificate directory exists
+      ansible.builtin.file:
+        path: "{{ cert_dir }}"
+        state: directory
+        mode: '0700'
+
+    - name: Ensure local LE account directory exists
+      ansible.builtin.file:
+        path: "{{ account_dir }}"
+        state: directory
+        mode: '0700'
+
+    - name: Generate Let's Encrypt Account Key if not created
+      community.crypto.openssl_privatekey:
+        path: "{{ account_dir }}/account.key"
+        type: RSA
+        size: 4096
+        state: present
+
+    - name: Generate Domain Private Key
+      community.crypto.openssl_privatekey:
+        path: "{{ cert_dir }}/{{ domain_name }}.key"
+        type: RSA
+        size: 4096
+
+    - name: Generate Certificate Signing Request (CSR)
+      community.crypto.openssl_csr:
+        path: "{{ cert_dir }}/{{ domain_name }}.csr"
+        privatekey_path: "{{ cert_dir }}/{{ domain_name }}.key"
+        common_name: "*.{{ domain_name }}"
+        subject_alt_name:
+          - "DNS:*.{{ domain_name }}"
+
+    # ------------------------------------------------------------------
+    # Step 2: ACME DNS-01 Challenge via PowerDNS
+    # ------------------------------------------------------------------
+
+    - name: Create ACME Challenge using staging directory
+      community.crypto.acme_certificate:
+        acme_directory: "{{ acme_directory }}"
+        acme_version: 2
+        challenge: dns-01
+        account_email: "admin@domain.com"
+        account_key_src: "{{ account_dir }}/account.key"
+        csr: "{{ cert_dir }}/{{ domain_name }}.csr"
+        dest: "{{ cert_dir }}/{{ domain_name }}.crt"
+        fullchain_dest: "{{ cert_dir }}/fullchain.crt"
+        terms_agreed: true
+        modify_account: true
+        force: true
+      register: acme_challenge
+
+    - name: Debug ACME Content
+      ansible.builtin.debug:
+        msg:
+          - "--- Content sent to DNS Provider ---"
+          - "{{ (acme_challenge.challenge_data | dict2items | map(attribute='value') | map(attribute='dns-01') | map(attribute='resource_value') | first) | default('No challenge required (cached auth)') }}"
+      when:
+        - acme_challenge is changed
+        - acme_challenge.challenge_data is defined
+        - acme_challenge.challenge_data | length > 0
+
+    - name: Add TXT records to PowerDNS API
+      ansible.builtin.uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/domain.com."
+        method: PATCH
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          rrsets:
+            - name: "_acme-challenge.domain.com."
+              type: "TXT"
+              ttl: 60
+              changetype: "REPLACE"
+              records:
+                - content: '"{{ (acme_challenge.challenge_data | dict2items | first).value["dns-01"].resource_value }}"'
+                  disabled: false
+        status_code: [200, 204]
+      when:
+        - acme_challenge is changed
+        - acme_challenge.challenge_data is defined
+        - acme_challenge.challenge_data | length > 0
+
+    - name: Pause briefly for DNS propagation
+      ansible.builtin.pause:
+        seconds: 5
+      when:
+        - acme_challenge is changed
+        - acme_challenge.challenge_data is defined
+        - acme_challenge.challenge_data | length > 0
+
+    - name: Complete ACME Challenge and Retrieve Certificate
+      community.crypto.acme_certificate:
+        acme_directory: "{{ acme_directory }}"
+        acme_version: 2
+        challenge: dns-01
+        account_key_src: "{{ account_dir }}/account.key"
+        csr: "{{ cert_dir }}/{{ domain_name }}.csr"
+        dest: "{{ cert_dir }}/{{ domain_name }}.crt"
+        fullchain_dest: "{{ cert_dir }}/fullchain.crt"
+        data: "{{ acme_challenge }}"
+
+    - name: Clean up TXT records from PowerDNS API
+      ansible.builtin.uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/domain.com."
+        method: PATCH
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          rrsets:
+            - name: "_acme-challenge.domain.com."
+              type: "TXT"
+              changetype: "DELETE"
+              records: []
+        status_code: [200, 204]
+      when:
+        - acme_challenge is changed
+        - acme_challenge.challenge_data is defined
+        - acme_challenge.challenge_data | length > 0
+        status_code: 200
