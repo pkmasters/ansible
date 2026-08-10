@@ -1,0 +1,44 @@
+---
+- name: Check Certificate Expiry and Renew
+  hosts: localhost
+  gather_facts: false
+  vars:
+    cert_path: "/tmp/certs-staging/domain.com/domain.com.crt"
+    days_threshold: 15
+  tasks:
+    - name: Gather system date/time
+      ansible.builtin.setup:
+        filter:
+          - "ansible_date_time"
+
+    - name: Check if certificate file exists
+      ansible.builtin.stat:
+        path: "{{ cert_path }}"
+      register: cert_file
+
+    - name: Get certificate details
+      community.crypto.x509_certificate_info:
+        path: "{{ cert_path }}"
+      register: cert_info
+      when: cert_file.stat.exists
+
+    - name: Calculate remaining days
+      ansible.builtin.set_fact:
+        days_remaining: >-
+         {{
+            ((cert_info.not_after | to_datetime('%Y%m%d%H%M%SZ')) - (ansible_facts['date_time']['iso8601'] | to_datetime('%Y-%m-%dT%H:%M:%SZ'))).days
+            if (cert_file.stat.exists and cert_info.not_after is defined)
+            else 0
+          }}
+
+    - name: DEBUG for trigger renewal task below
+      ansible.builtin.debug:
+        msg: "DEBUG: Certificate expires in {{ days_remaining }} days."
+
+    - name: Trigger renewal if below threshold
+      when: days_remaining | int <= days_threshold
+      block:
+        - name: Run ACME DNS01 Renewal Tasks
+          # Your ACME DNS-01 play/role goes here
+          ansible.builtin.debug:
+            msg: "Certificate expires in {{ days_remaining }} days. Renewing now..."
