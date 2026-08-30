@@ -3,6 +3,9 @@
   hosts: windows-server
   gather_facts: false
   tasks:
+  #  - name: Generate and publish new Issuing CA CRL
+  #    ansible.windows.win_command: certutil -crl
+  
     - name: Find Root CA files
       ansible.windows.win_find:
         paths:
