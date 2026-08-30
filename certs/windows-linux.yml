@@ -66,3 +66,12 @@
         owner: root
         group: root
         mode: "0644"
+
+- name: Remove temp Root/Sub CA files from Semaphore server
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Delete temp CRL files
+      ansible.builtin.file:
+        path: "{{ semaphore_pki_dir }}"
+        state: absent
