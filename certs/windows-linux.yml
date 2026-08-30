@@ -1,0 +1,68 @@
+---
+- name: Publish AD CS files to Linux Web Server
+  hosts: windows-server
+  gather_facts: false
+  tasks:
+    - name: Find Root CA files
+      ansible.windows.win_find:
+        paths:
+          - "{{ windows_rootca_dir }}"
+        patterns:
+          - "*.crt"
+          - "*.crl"
+        file_type: file
+      register: rootca_files
+
+    - name: Find Issuing CA files
+      ansible.windows.win_find:
+        paths:
+          - "{{ windows_subca_dir }}"
+        patterns:
+          - "*.crt"
+          - "*.crl"
+        file_type: file
+      register: issuingca_files
+
+    - name: Fetch Root CA files to Semaphore
+      ansible.builtin.fetch:
+        src: "{{ item.path }}"
+        dest: "{{ semaphore_rootca_dir }}"
+        flat: true
+      loop: "{{ rootca_files.files }}"
+
+    - name: Fetch Issuing CA files to Semaphore
+      ansible.builtin.fetch:
+        src: "{{ item.path }}"
+        dest: "{{ semaphore_subca_dir }}"
+        flat: true
+      loop: "{{ issuingca_files.files }}"
+
+
+- name: Install PKI files on Linux Web Server
+  hosts: web-server
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Ensure Web Server PKI directory exists
+      ansible.builtin.file:
+        path: "{{ web_pki_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Copy Root CA files from Semaphore to Web Server
+      ansible.builtin.copy:
+        src: "{{ semaphore_rootca_dir }}"
+        dest: "{{ web_pki_dir }}"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Copy Issuing CA files from Semaphore to Web Server
+      ansible.builtin.copy:
+        src: "{{ semaphore_subca_dir }}"
+        dest: "{{ web_pki_dir }}"
+        owner: root
+        group: root
+        mode: "0644"
