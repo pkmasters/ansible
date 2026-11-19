@@ -1,0 +1,35 @@
+---
+- name: Convert ACME Certificate to PKCS#12
+  hosts: localhost
+  gather_facts: false
+  vars:
+    # Paths on your Ansible runner / Semaphore host
+    acme_cert_path: "{{ cert_dir }}/leaf.crt"
+    acme_fullchain_path: "{{ cert_dir }}/fullchain.crt"
+    acme_key_path: "{{ cert_dir }}/private.key"
+    # acme_chain_path: "/etc/ssl/acme/chain.crt"  # Optional CA chain file
+    local_pfx_path: "/opt/semaphore/{{ pfx_file_name }}.pfx"
+    cert_friendly_name: "{{ cert_friendly_name }}"
+
+  tasks:
+    - name: Convert CRT and KEY to PFX
+      delegate_to: localhost
+      run_once: true
+      community.crypto.openssl_pkcs12:
+        action: export
+        path: "{{ local_pfx_path }}"
+        certificate_path: "{{ acme_cert_path }}"
+        other_certificates: "{{ acme_fullchain_path }}"
+        other_certificates_parse_all: true
+        privatekey_path: "{{ acme_key_path }}"
+        friendly_name: "{{ cert_friendly_name }}"
+        # other_certificates: "{{ acme_chain_path }}" # Include if you have a intermediate CA chain
+        passphrase: "{{ cert_password }}"
+        state: present
+
+#    - name: Clean up temporary PFX on control node
+#      delegate_to: localhost
+#      run_once: true
+#      ansible.builtin.file:
+#        path: "{{ local_pfx_path }}"
+#        state: absent
